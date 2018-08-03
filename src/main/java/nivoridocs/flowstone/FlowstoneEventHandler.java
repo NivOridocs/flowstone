@@ -1,34 +1,20 @@
 package nivoridocs.flowstone;
 
-import java.util.Arrays;
-import java.util.Random;
-
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.gui.spectator.PlayerMenuObject;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.client.event.sound.PlaySoundSourceEvent;
-import net.minecraftforge.client.event.sound.SoundEvent;
 import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.event.world.BlockEvent.CreateFluidSourceEvent;
-import net.minecraftforge.fluids.FluidEvent;
-import net.minecraftforge.fluids.FluidEvent.FluidMotionEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import nivoridocs.flowstone.event.LavaExtinguishEvent;
 
 @EventBusSubscriber(Side.CLIENT)
-public class FluidMotionEventHandler {
+public class FlowstoneEventHandler {
 	
 	private static final String LAVA_EXTINGUISH = "block.lava.extinguish";
 	
@@ -41,10 +27,14 @@ public class FluidMotionEventHandler {
 					(int) event.getSound().getZPosF());
 			World world = DimensionManager.getWorld(0);
 			IBlockState state = world.getBlockState(pos);
-			if (hasWaterAround(world, pos))
-				System.out.println("Handled!"); // TODO
+			if (isLavaExtinguishedBlock(state.getBlock()) && hasWaterAround(world, pos))
+				MinecraftForge.EVENT_BUS.post(new LavaExtinguishEvent(world, pos, state));				
 		}
 		
+	}
+	
+	private static boolean isLavaExtinguishedBlock(Block block) {
+		return block == Blocks.COBBLESTONE || block == Blocks.STONE || block == Blocks.OBSIDIAN;
 	}
 	
 	private static BlockPos createBlockPos(int x, int y, int z) {
@@ -52,9 +42,9 @@ public class FluidMotionEventHandler {
 	}
 	
 	private static boolean hasWaterAround(World world, BlockPos pos) {
-		return isWater(world, pos.north()) || isWater(world, pos.south())
-				|| isWater(world, pos.east()) || isWater(world, pos.west())
-				|| isWater(world, pos.up()) || isWater(world, pos.down());
+		return isWater(world, pos.up())
+				|| isWater(world, pos.north()) || isWater(world, pos.south())
+				|| isWater(world, pos.east()) || isWater(world, pos.west());
 	}
 	
 	private static boolean isWater(World world, BlockPos pos) {
