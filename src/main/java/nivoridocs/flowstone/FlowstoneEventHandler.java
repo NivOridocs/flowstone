@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import nivoridocs.flowstone.event.LavaExtinguishEvent;
 
-@EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber
 public class FlowstoneEventHandler {
 	
 	private static final String LAVA_EXTINGUISH = "block.lava.extinguish";
@@ -28,7 +28,7 @@ public class FlowstoneEventHandler {
 			World world = DimensionManager.getWorld(0);
 			IBlockState state = world.getBlockState(pos);
 			if (isLavaExtinguishedBlock(state.getBlock()) && hasWaterAround(world, pos))
-				MinecraftForge.EVENT_BUS.post(new LavaExtinguishEvent(world, pos, state));				
+				MinecraftForge.EVENT_BUS.post(new LavaExtinguishEvent(world, pos, state));
 		}
 		
 	}
