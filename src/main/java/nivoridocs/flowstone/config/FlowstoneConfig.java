@@ -52,18 +52,18 @@ public class FlowstoneConfig {
 	
 	private static Map<String, Integer> defaultForCobblestone() {
 		Map<String, Integer> map = new HashMap<>();
-		map.put(getName(Blocks.COBBLESTONE), 256);
-		map.put(getName(Blocks.IRON_ORE), 64);
-		map.put(getName(Blocks.REDSTONE_ORE), 16);
-		map.put(getName(Blocks.GOLD_ORE), 4);
-		map.put(getName(Blocks.LAPIS_ORE), 1);
-		map.put(getName(Blocks.DIAMOND_ORE), 1);
+		map.put(getName(Blocks.COBBLESTONE), 1);
 		return map;
 	}
 	
 	private static Map<String, Integer> defaultForStone() {
 		Map<String, Integer> map = new HashMap<>();
-		map.put(getName(Blocks.STONE), 1);
+		map.put(getName(Blocks.STONE), 256);
+		map.put(getName(Blocks.IRON_ORE), 64);
+		map.put(getName(Blocks.REDSTONE_ORE), 16);
+		map.put(getName(Blocks.GOLD_ORE), 4);
+		map.put(getName(Blocks.LAPIS_ORE), 1);
+		map.put(getName(Blocks.DIAMOND_ORE), 1);
 		return map;
 	}
 	
@@ -114,6 +114,15 @@ public class FlowstoneConfig {
 		if (obsidianDouble == null)
 			obsidianDouble = getDistribution(obsidian);
 		return Optional.of(obsidianBlock[getIndex(obsidianDouble, random)]);
+	}
+	
+	public static void reset() {
+		cobblestoneBlock = null;
+		cobblestoneDouble = null;
+		stoneBlock = null;
+		stoneDouble = null;
+		obsidianBlock = null;
+		obsidianDouble = null;
 	}
 	
 	public static Optional<Block> randomFor(Block block, Random random) {
