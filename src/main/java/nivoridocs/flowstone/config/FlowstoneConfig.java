@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -83,7 +84,8 @@ public class FlowstoneConfig {
 	}
 	
 	private static Block[] getBlocks(Map<String, Integer> map) {
-		return map.keySet().stream().sorted().map(Block::getBlockFromName)
+		return map.entrySet().stream().filter(e -> e.getValue()  > 0)
+				.map(Entry::getKey).sorted().map(Block::getBlockFromName)
 				.toArray(size -> new Block[size]);
 	}
 	
