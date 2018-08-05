@@ -1,8 +1,11 @@
 package nivoridocs.flowstone.config;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
@@ -20,45 +23,53 @@ import nivoridocs.flowstone.Flowstone;
 public class FlowstoneConfig {
 
 	@RequiresWorldRestart
-	public static Map<String, Integer> insteadOfCobblestone = defaultForCobblestone();
+	public static Map<String, Integer> cobblestone = defaultForCobblestone();
 	
 	@Ignore private static Block[] cobblestoneBlock;
 	@Ignore private static double[] cobblestoneDouble;
 	
 	@RequiresWorldRestart
-	public static Map<String, Integer> insteadOfStone = defaultForStone();
+	public static Map<String, Integer> stone = defaultForStone();
 	
 	@Ignore private static Block[] stoneBlock;
 	@Ignore private static double[] stoneDouble;
 	
 	@RequiresWorldRestart
-	public static Map<String, Integer> insteadOfObsidian = defaultForObsidian();
+	public static Map<String, Integer> obsidian = defaultForObsidian();
 	
 	@Ignore private static Block[] obsidianBlock;
 	@Ignore private static double[] obsidianDouble;
-
+	
+	private static Map<String, Integer> defaultFor(Block block) {
+		Map<String, Integer> map = new HashMap<>();
+		map.put(block.getRegistryName().toString(), 1);
+		return map;
+	}
+	
+	private static String getName(Block block) {
+		return block.getRegistryName().toString();
+	}
+	
 	private static Map<String, Integer> defaultForCobblestone() {
 		Map<String, Integer> map = new HashMap<>();
-		map.put(Blocks.COBBLESTONE.getRegistryName().toString(), 2);
-		map.put(Blocks.GRAVEL.getRegistryName().toString(), 1);
-		map.put(Blocks.SAND.getRegistryName().toString(), 1);
+		map.put(getName(Blocks.COBBLESTONE), 256);
+		map.put(getName(Blocks.IRON_ORE), 64);
+		map.put(getName(Blocks.REDSTONE_ORE), 16);
+		map.put(getName(Blocks.GOLD_ORE), 4);
+		map.put(getName(Blocks.LAPIS_ORE), 1);
+		map.put(getName(Blocks.DIAMOND_ORE), 1);
 		return map;
 	}
-
+	
 	private static Map<String, Integer> defaultForStone() {
 		Map<String, Integer> map = new HashMap<>();
-		map.put(Blocks.STONE.getRegistryName().toString(), 8);
-		map.put(Blocks.IRON_ORE.getRegistryName().toString(), 4);
-		map.put(Blocks.GOLD_ORE.getRegistryName().toString(), 2);
-		map.put(Blocks.LAPIS_ORE.getRegistryName().toString(), 1);
-		map.put(Blocks.REDSTONE_ORE.getRegistryName().toString(), 1);
+		map.put(getName(Blocks.STONE), 1);
 		return map;
 	}
-
+	
 	private static Map<String, Integer> defaultForObsidian() {
 		Map<String, Integer> map = new HashMap<>();
-		map.put(Blocks.OBSIDIAN.getRegistryName().toString(), 9);
-		map.put(Blocks.DIAMOND_ORE.getRegistryName().toString(), 1);
+		map.put(getName(Blocks.OBSIDIAN), 1);
 		return map;
 	}
 
@@ -71,7 +82,7 @@ public class FlowstoneConfig {
 		return array;
 	}
 	
-	private static Block[] getBlock(Map<String, Integer> map) {
+	private static Block[] getBlocks(Map<String, Integer> map) {
 		return map.keySet().stream().sorted().map(Block::getBlockFromName)
 				.toArray(size -> new Block[size]);
 	}
@@ -81,28 +92,39 @@ public class FlowstoneConfig {
 		return index < 0 ? - index - 1 : index;
 	}
 	
-	public static Block randomForCobblestone(Random random) {
+	private static Optional<Block> randomForCobblestone(Random random) {
 		if (cobblestoneBlock == null)
-			cobblestoneBlock = getBlock(insteadOfCobblestone);
+			cobblestoneBlock = getBlocks(cobblestone);
 		if (cobblestoneDouble == null)
-			cobblestoneDouble = getDistribution(insteadOfCobblestone);
-		return cobblestoneBlock[getIndex(cobblestoneDouble, random)];
+			cobblestoneDouble = getDistribution(cobblestone);
+		return Optional.of(cobblestoneBlock[getIndex(cobblestoneDouble, random)]);
 	}
 	
-	public static Block randomForStone(Random random) {
+	private static Optional<Block> randomForStone(Random random) {
 		if (stoneBlock == null)
-			stoneBlock = getBlock(insteadOfStone);
+			stoneBlock = getBlocks(stone);
 		if (stoneDouble == null)
-			stoneDouble = getDistribution(insteadOfStone);
-		return stoneBlock[getIndex(stoneDouble, random)];
+			stoneDouble = getDistribution(stone);
+		return Optional.of(stoneBlock[getIndex(stoneDouble, random)]);
 	}
 	
-	public static Block randomForObsidian(Random random) {
+	private static Optional<Block> randomForObsidian(Random random) {
 		if (obsidianBlock == null)
-			obsidianBlock = getBlock(insteadOfObsidian);
+			obsidianBlock = getBlocks(obsidian);
 		if (obsidianDouble == null)
-			obsidianDouble = getDistribution(insteadOfObsidian);
-		return obsidianBlock[getIndex(obsidianDouble, random)];
+			obsidianDouble = getDistribution(obsidian);
+		return Optional.of(obsidianBlock[getIndex(obsidianDouble, random)]);
+	}
+	
+	public static Optional<Block> randomFor(Block block, Random random) {
+		Optional<Block> result = Optional.empty();
+		if (block == Blocks.COBBLESTONE)
+			result = randomForCobblestone(random);
+		if (block == Blocks.STONE)
+			result = randomForStone(random);
+		if (block == Blocks.OBSIDIAN)
+			result = randomForStone(random);
+		return result.filter(x -> x != block);
 	}
 
 }
