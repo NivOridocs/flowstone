@@ -1,22 +1,16 @@
 package nivoridocs.flowstone.config;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
-
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Ignore;
-import net.minecraftforge.common.config.Config.RangeInt;
 import net.minecraftforge.common.config.Config.RequiresWorldRestart;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import nivoridocs.flowstone.Flowstone;
 
 @Config(modid = Flowstone.MODID)
@@ -40,12 +34,6 @@ public class FlowstoneConfig {
 	
 	@Ignore private static Block[] obsidianBlock;
 	@Ignore private static double[] obsidianDouble;
-	
-	private static Map<String, Integer> defaultFor(Block block) {
-		Map<String, Integer> map = new HashMap<>();
-		map.put(block.getRegistryName().toString(), 1);
-		return map;
-	}
 	
 	private static String getName(Block block) {
 		return block.getRegistryName().toString();
@@ -134,7 +122,7 @@ public class FlowstoneConfig {
 		if (block == Blocks.STONE)
 			result = randomForStone(random);
 		if (block == Blocks.OBSIDIAN)
-			result = randomForStone(random);
+			result = randomForObsidian(random);
 		return result.filter(x -> x != block);
 	}
 
