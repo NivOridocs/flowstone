@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "flowstone",
+  "version": "${version}",
+  "name": "Flowstone",
+  "description": "When lava and water meet",
+  "authors": [
+    "nivoridocs"
+  ],
+  "contributors": [],
+  "contact": {
+    "sources": "https://github.com/nivoridocs/flowstone"
+  },
+  "license": "MIT",
+  "icon": "assets/flowstone/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "nivoridocs.flowstone.Flowstone"
+    ],
+    "client": [],
+    "server": []
+  },
+  "mixins": [
+    "flowstone.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.10.1"
+  }
+}
