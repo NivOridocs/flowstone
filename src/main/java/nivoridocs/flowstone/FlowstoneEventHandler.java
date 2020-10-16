@@ -7,6 +7,9 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -30,10 +33,17 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class FlowstoneEventHandler {
 
-	private static final double LOWEST_CHANCE = 0.01d;
-	private static final double HIGHEST_CHANCE = 0.25d;
-	private static final double BLOCKS_LIMIT = 98.0d;
-	private static final double THRESHOLD = BLOCKS_LIMIT * (HIGHEST_CHANCE - LOWEST_CHANCE);
+	private static final Logger log = LogManager.getLogger();
+
+	// TODO Move to configuration
+	private static final double LOWEST = 0.05d; // in [0.0, HIGHEST_CHANCE]
+	private static final double HIGHEST = 0.5d; // in [LOWEST_CHANCE, 1.0]
+	private static final int LIMIT = 45; // in [0, 98]
+
+	private static final double EPSILON = 1e-6;
+
+	private static boolean doSearch = HIGHEST - LOWEST > EPSILON && LIMIT > 0; // -> targetThreshold > 0
+	private static double targetThreshold = LIMIT * (HIGHEST - LOWEST); // [0, 1.0)
 
 	private static final boolean SEARCH_ORES = true;
 
@@ -46,17 +56,21 @@ public class FlowstoneEventHandler {
 			computeStorageToOreMap(event.getWorld().getWorld());
 
 			List<Block> ores = Lists.newArrayList(Tags.Blocks.ORES.getAllElements());
-
 			final int initialOres = ores.size();
-			searchBlocks(event.getWorld(), event.getPos(), ores::add);
-			final int blocksFound = initialOres - ores.size();
 
-			double threshold = (blocksFound / THRESHOLD) + LOWEST_CHANCE;
-			double chance = random.nextDouble();
-			if (chance < threshold) {
+			double threshold = HIGHEST;
+			if (doSearch) { // -> targetThreshold > 0
+				searchBlocks(event.getWorld(), event.getPos(), ores::add);
+				final int blocksFound = Math.min(ores.size() - initialOres, LIMIT);
+				threshold = (blocksFound / targetThreshold) + LOWEST; // may be 0
+			}
+
+			double chance = random.nextDouble(); // -> chance >= 0.0
+			if (chance < threshold) { // -> threshold > 0.0
 				int index = (int) ((chance / threshold) * ores.size());
 				event.setNewState(ores.get(index).getDefaultState());
 			}
+			log.debug("Generate {}", event.getNewState().getBlock().getRegistryName());
 		}
 	}
 
@@ -66,8 +80,10 @@ public class FlowstoneEventHandler {
 		for (Block ore : ores) {
 			Optional<Block> storage = getStoragesFromOres(getItemFromBlock(ore), world).map(this::getBlockFromItem)
 					.filter(Tags.Blocks.STORAGE_BLOCKS::contains);
-			if (storage.isPresent())
+			if (storage.isPresent()) {
+				log.debug("Map {} to {}", storage.get().getRegistryName(), ore.getRegistryName());
 				storageToOreMap.putIfAbsent(storage.get(), ore);
+			}
 		}
 	}
 
@@ -104,12 +120,12 @@ public class FlowstoneEventHandler {
 		for (int x = -2; x <= 2; x++) {
 			for (int y = -2; y <= 2; y++) {
 				getOre(world.getBlockState(pos.add(x, y, +2)).getBlock()).ifPresent(onBlockFound);
-				getOre(world.getBlockState(pos.add(x, y, -2)).getBlock()).ifPresent(onBlockFound);
 				if (Math.abs(x) == 2 || Math.abs(y) == 2) {
 					for (int z = -1; z <= 1; z++) {
 						getOre(world.getBlockState(pos.add(x, y, z)).getBlock()).ifPresent(onBlockFound);
 					}
 				}
+				getOre(world.getBlockState(pos.add(x, y, -2)).getBlock()).ifPresent(onBlockFound);
 			}
 		}
 	}
