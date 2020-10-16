@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,13 +38,9 @@ public class FlowstoneEventHandler {
 	private static final double LOWEST = 0.05d; // in [0.0, HIGHEST_CHANCE]
 	private static final double HIGHEST = 0.5d; // in [LOWEST_CHANCE, 1.0]
 	private static final int LIMIT = 45; // in [0, 98]
+	private static final boolean SEARCH_ORES = false;
 
 	private static final double EPSILON = 1e-6;
-
-	private static boolean doSearch = HIGHEST - LOWEST > EPSILON && LIMIT > 0; // -> targetThreshold > 0
-	private static double targetThreshold = LIMIT * (HIGHEST - LOWEST); // [0, 1.0)
-
-	private static final boolean SEARCH_ORES = true;
 
 	private final Map<Block, Block> storageToOreMap = Maps.newHashMap();
 	private final Random random = new Random();
@@ -59,10 +54,10 @@ public class FlowstoneEventHandler {
 			final int initialOres = ores.size();
 
 			double threshold = HIGHEST;
-			if (doSearch) { // -> targetThreshold > 0
-				searchBlocks(event.getWorld(), event.getPos(), ores::add);
+			if (HIGHEST - LOWEST > EPSILON && LIMIT > 0) { // -> targetThreshold > 0
+				ores.addAll(searchBlocks(event.getWorld(), event.getPos()));
 				final int blocksFound = Math.min(ores.size() - initialOres, LIMIT);
-				threshold = (blocksFound / targetThreshold) + LOWEST; // may be 0
+				threshold = (blocksFound * (HIGHEST - LOWEST) / LIMIT) + LOWEST; // may be 0
 			}
 
 			double chance = random.nextDouble(); // -> chance >= 0.0
@@ -108,26 +103,29 @@ public class FlowstoneEventHandler {
 					return false;
 				}
 			};
-			container.inventorySlots.forEach(slot -> slot.putStack(semltingResult.get().getDefaultInstance()));
 			CraftingInventory inventory = new CraftingInventory(container, 3, 3);
+			for (int i = 0; i < inventory.getSizeInventory(); i++)
+				inventory.setInventorySlotContents(i, semltingResult.get().getDefaultInstance());
 			result = world.getRecipeManager().getRecipe(IRecipeType.CRAFTING, inventory, world)
 					.map(ICraftingRecipe::getRecipeOutput).map(ItemStack::getItem);
 		}
 		return result;
 	}
 
-	private void searchBlocks(IWorld world, BlockPos pos, Consumer<Block> onBlockFound) {
+	private Collection<Block> searchBlocks(IWorld world, BlockPos pos) {
+		Collection<Block> result = Lists.newArrayListWithCapacity(LIMIT);
 		for (int x = -2; x <= 2; x++) {
 			for (int y = -2; y <= 2; y++) {
-				getOre(world.getBlockState(pos.add(x, y, +2)).getBlock()).ifPresent(onBlockFound);
-				if (Math.abs(x) == 2 || Math.abs(y) == 2) {
-					for (int z = -1; z <= 1; z++) {
-						getOre(world.getBlockState(pos.add(x, y, z)).getBlock()).ifPresent(onBlockFound);
+				for (int z = -2; z <= 2; z++) {
+					if (Math.abs(x) == 2 || Math.abs(y) == 2 || Math.abs(z) == 2) {
+						if (result.size() < LIMIT)
+							getOre(world.getBlockState(pos.add(x, y, z)).getBlock()).ifPresent(result::add);
+						else return result;
 					}
 				}
-				getOre(world.getBlockState(pos.add(x, y, -2)).getBlock()).ifPresent(onBlockFound);
 			}
 		}
+		return result;
 	}
 
 	private Optional<Block> getOre(Block block) {
