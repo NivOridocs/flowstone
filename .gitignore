@@ -1,0 +1,19 @@
+*
+!*/
+
+# Git
+!.gitignore
+!LICENSE
+!README.md
+
+# Source
+!src/**
+
+# Gradle
+!gradle/**
+!build.gradle
+!gradle.properties
+!gradlew
+!gradlew.bat
+/.gradle/
+/build/

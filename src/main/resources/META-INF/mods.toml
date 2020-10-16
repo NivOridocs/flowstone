@@ -1,0 +1,19 @@
+modLoader="javafml" #mandatory
+loaderVersion="[31,)"
+license="MIT"
+authors="Niv_Oridocs" #optional
+
+[[mods]]
+modId="flowstone"
+version="${file.jarVersion}"
+displayName="Flowstone"
+description='''
+When lava and water meet
+'''
+
+[[dependencies.flowstone]]
+    modId="forge"
+    mandatory=true
+    versionRange="[31,)"
+    ordering="NONE"
+    side="BOTH"
