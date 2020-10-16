@@ -1,5 +1,12 @@
 package nivoridocs.flowstone;
 
+import static nivoridocs.flowstone.config.FlowstoneConfig.DEFAULT_BLOCKS_LIMIT;
+import static nivoridocs.flowstone.config.FlowstoneConfig.DEFAULT_HIGHEST_CHANCE;
+import static nivoridocs.flowstone.config.FlowstoneConfig.DEFAULT_LOWEST_CHANCE;
+import static nivoridocs.flowstone.config.FlowstoneConfig.blocksLimit;
+import static nivoridocs.flowstone.config.FlowstoneConfig.highestChance;
+import static nivoridocs.flowstone.config.FlowstoneConfig.lowestChance;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,30 +41,39 @@ public class FlowstoneEventHandler {
 
 	private static final Logger log = LogManager.getLogger();
 
-	// TODO Move to configuration
-	private static final double LOWEST = 0.05d; // in [0.0, HIGHEST_CHANCE]
-	private static final double HIGHEST = 0.5d; // in [LOWEST_CHANCE, 1.0]
-	private static final int LIMIT = 45; // in [0, 98]
-	private static final boolean SEARCH_ORES = false;
-
 	private static final double EPSILON = 1e-6;
 
 	private final Map<Block, Block> storageToOreMap = Maps.newHashMap();
 	private final Random random = new Random();
 
+	private double lowest = DEFAULT_LOWEST_CHANCE; // in [0.0, HIGHEST_CHANCE]
+	private double highest = DEFAULT_HIGHEST_CHANCE; // in [LOWEST_CHANCE, 1.0]
+	private int limit = DEFAULT_BLOCKS_LIMIT; // in [0, 98]
+
+	public FlowstoneEventHandler() {
+		if (lowestChance() < highestChance()) {
+			lowest = lowestChance();
+			highest = highestChance();
+		} else {
+			log.warn("'lowest_chance' must be ACTUALLY lower than 'highest_chance', default used instead");
+		}
+		limit = blocksLimit();
+	}
+
 	@SubscribeEvent
 	public void onFluidPlaceBlockEvent(FluidPlaceBlockEvent event) {
 		if (Blocks.STONE.equals(event.getNewState().getBlock())) {
+			reloadConfig();
 			computeStorageToOreMap(event.getWorld().getWorld());
 
 			List<Block> ores = Lists.newArrayList(Tags.Blocks.ORES.getAllElements());
 			final int initialOres = ores.size();
 
-			double threshold = HIGHEST;
-			if (HIGHEST - LOWEST > EPSILON && LIMIT > 0) { // -> targetThreshold > 0
-				ores.addAll(searchBlocks(event.getWorld(), event.getPos()));
-				final int blocksFound = Math.min(ores.size() - initialOres, LIMIT);
-				threshold = (blocksFound * (HIGHEST - LOWEST) / LIMIT) + LOWEST; // may be 0
+			double threshold = highest;
+			if (highest - lowest > EPSILON && limit > 0) { // -> targetThreshold > 0
+				ores.addAll(getNearSotrageBlocks(event.getWorld(), event.getPos()));
+				final int blocksFound = Math.min(ores.size() - initialOres, limit);
+				threshold = (blocksFound * (highest - lowest) / limit) + lowest; // may be 0
 			}
 
 			double chance = random.nextDouble(); // -> chance >= 0.0
@@ -69,7 +85,19 @@ public class FlowstoneEventHandler {
 		}
 	}
 
+	public void reloadConfig() {
+		if (lowestChance() < highestChance()) {
+			lowest = lowestChance();
+			highest = highestChance();
+		} else {
+			log.warn("'lowest_chance' must be ACTUALLY lower than 'highest_chance', not reloaded");
+		}
+		limit = blocksLimit();
+	}
+
 	private void computeStorageToOreMap(World world) {
+		if (!storageToOreMap.isEmpty())
+			return;
 		storageToOreMap.clear();
 		Collection<Block> ores = Tags.Blocks.ORES.getAllElements();
 		for (Block ore : ores) {
@@ -112,15 +140,16 @@ public class FlowstoneEventHandler {
 		return result;
 	}
 
-	private Collection<Block> searchBlocks(IWorld world, BlockPos pos) {
-		Collection<Block> result = Lists.newArrayListWithCapacity(LIMIT);
+	private Collection<Block> getNearSotrageBlocks(IWorld world, BlockPos pos) {
+		Collection<Block> result = Lists.newArrayListWithCapacity(limit);
 		for (int x = -2; x <= 2; x++) {
 			for (int y = -2; y <= 2; y++) {
 				for (int z = -2; z <= 2; z++) {
 					if (Math.abs(x) == 2 || Math.abs(y) == 2 || Math.abs(z) == 2) {
-						if (result.size() < LIMIT)
-							getOre(world.getBlockState(pos.add(x, y, z)).getBlock()).ifPresent(result::add);
-						else return result;
+						if (result.size() < limit)
+							toStorageBlock(world.getBlockState(pos.add(x, y, z)).getBlock()).ifPresent(result::add);
+						else
+							return result;
 					}
 				}
 			}
@@ -128,18 +157,7 @@ public class FlowstoneEventHandler {
 		return result;
 	}
 
-	private Optional<Block> getOre(Block block) {
-		if (SEARCH_ORES)
-			return generateFromOres(block);
-		else
-			return generateFromStorages(block);
-	}
-
-	private Optional<Block> generateFromOres(Block block) {
-		return Tags.Blocks.ORES.contains(block) ? Optional.of(block) : Optional.empty();
-	}
-
-	private Optional<Block> generateFromStorages(Block block) {
+	private Optional<Block> toStorageBlock(Block block) {
 		if (Tags.Blocks.STORAGE_BLOCKS.contains(block)) {
 			return Optional.ofNullable(getStorageToOreMap().get(block));
 		} else {
