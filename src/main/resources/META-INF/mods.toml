@@ -1,12 +1,12 @@
 modLoader="javafml" #mandatory
 loaderVersion="[31,)"
 license="MIT"
-authors="Niv_Oridocs" #optional
 
 [[mods]]
 modId="flowstone"
-version="${file.jarVersion}"
+version="1.1.0"
 displayName="Flowstone"
+authors="Niv_Oridocs" #optional
 description='''
 When lava and water meet
 '''
