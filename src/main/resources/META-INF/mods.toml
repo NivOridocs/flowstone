@@ -4,7 +4,7 @@ license="MIT"
 
 [[mods]]
 modId="flowstone"
-version="1.1.0"
+version="forge-1.15.2-1.1.0.1"
 displayName="Flowstone"
 authors="Niv_Oridocs" #optional
 description='''
