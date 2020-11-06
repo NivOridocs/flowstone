@@ -2,7 +2,9 @@
   "required": true,
   "package": "nivoridocs.flowstone.mixin",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [],
+  "mixins": [
+  	"FlowstoneMixin"
+  ],
   "client": [],
   "server": [],
   "injectors": {
