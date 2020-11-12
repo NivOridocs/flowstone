@@ -3,7 +3,7 @@
   "package": "nivoridocs.flowstone.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-  	"FlowstoneMixin"
+  	"LavaFluidMixin"
   ],
   "client": [],
   "server": [],
