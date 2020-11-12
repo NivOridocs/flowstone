@@ -20,6 +20,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
+import nivoridocs.flowstone.Flowstone;
+import nivoridocs.flowstone.FlowstoneConfig;
 
 @Mixin(LavaFluid.class)
 public class LavaFluidMixin {
@@ -60,6 +62,12 @@ public class LavaFluidMixin {
 	public void reset() {
 		oreBlocksCache.clear();
 		storageToOreMapCache.clear();
+
+		FlowstoneConfig config = Flowstone.getInstance().getConfig();
+		lowest = Math.min(config.getLowest(), config.getHighest());
+		highest = Math.max(config.getLowest(), config.getHighest());
+		limit = config.getLimit();
+
 	}
 
 	private Collection<Block> getNearSotrageBlocks(IWorld world, BlockPos pos) {
