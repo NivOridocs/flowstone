@@ -16,12 +16,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.LavaFluid;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
-import nivoridocs.flowstone.Flowstone;
-import nivoridocs.flowstone.FlowstoneConfig;
+import nivoridocs.flowstone.config.Configuration;
+import nivoridocs.flowstone.config.Configuration.Item;
 
 @Mixin(LavaFluid.class)
 public class LavaFluidMixin {
@@ -30,7 +29,7 @@ public class LavaFluidMixin {
 
 	private final List<Block> oreBlocksCache = Lists.newArrayList();
 
-	private final Map<Block, Block> storageToOreMapCache = Maps.newHashMap();
+	private final Map<Block, Block> blockToOreMapCache = Maps.newHashMap();
 
 	private double lowest = 0.05D; // in [0.0, HIGHEST_CHANCE]
 	private double highest = 0.5D; // in [LOWEST_CHANCE, 1.0]
@@ -61,12 +60,11 @@ public class LavaFluidMixin {
 
 	public void reset() {
 		oreBlocksCache.clear();
-		storageToOreMapCache.clear();
+		blockToOreMapCache.clear();
 
-		FlowstoneConfig config = Flowstone.getInstance().getConfig();
-		lowest = Math.min(config.getLowest(), config.getHighest());
-		highest = Math.max(config.getLowest(), config.getHighest());
-		limit = config.getLimit();
+		lowest = Configuration.getInstance().getMinChance();
+		highest = Configuration.getInstance().getMaxChance();
+		limit = Configuration.getInstance().getBlocksLimit();
 
 	}
 
@@ -78,7 +76,7 @@ public class LavaFluidMixin {
 					if (Math.abs(x) == 2 || Math.abs(y) == 2 || Math.abs(z) == 2) {
 						if (result.size() < limit)
 							Optional.ofNullable(
-									getStorageToOreMap().get(world.getBlockState(pos.add(x, y, z)).getBlock()))
+									getBlockToOreMap().get(world.getBlockState(pos.add(x, y, z)).getBlock()))
 									.ifPresent(result::add);
 						else
 							return result;
@@ -91,24 +89,22 @@ public class LavaFluidMixin {
 
 	private List<Block> getOreBlocks() {
 		if (oreBlocksCache.isEmpty())
-			Registry.BLOCK.getIds().stream().filter(id -> id.getPath().endsWith("_ore")).map(Registry.BLOCK::getOrEmpty)
-					.filter(Optional::isPresent).map(Optional::get).forEach(oreBlocksCache::add);
+			Configuration.getInstance().getItems().stream().map(Item::getOre).map(Registry.BLOCK::get)
+					.forEach(oreBlocksCache::add);
 		return oreBlocksCache;
 	}
 
-	private Map<Block, Block> getStorageToOreMap() {
-		if (storageToOreMapCache.isEmpty())
-			for (Block oreBlock : getOreBlocks()) {
-				Identifier oreId = Registry.BLOCK.getId(oreBlock);
-				if (!Registry.BLOCK.getDefaultId().equals(oreId) && oreId.getPath().endsWith("_ore")) {
-					Identifier storageId = new Identifier(oreId.getNamespace(),
-							oreId.getPath().replaceFirst("_ore$", "_block"));
-					Optional<Block> optionalBlock = Registry.BLOCK.getOrEmpty(storageId);
-					if (optionalBlock.isPresent())
-						storageToOreMapCache.put(optionalBlock.get(), oreBlock);
-				}
-			}
-		return storageToOreMapCache;
+	private Map<Block, Block> getBlockToOreMap() {
+		if (blockToOreMapCache.isEmpty())
+			Configuration.getInstance().getItems().forEach(this::putShortcut);
+		return blockToOreMapCache;
+	}
+
+	private void putShortcut(Item item) {
+		Optional<Block> block = item.getBlock().flatMap(Registry.BLOCK::getOrEmpty);
+		Optional<Block> ore = Registry.BLOCK.getOrEmpty(item.getOre());
+		if (block.isPresent() && ore.isPresent())
+			blockToOreMapCache.put(block.get(), ore.get());
 	}
 
 }
