@@ -19,6 +19,7 @@ import net.minecraft.fluid.LavaFluid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
+import nivoridocs.flowstone.Flowstone;
 import nivoridocs.flowstone.config.Configuration;
 import nivoridocs.flowstone.config.Configuration.Item;
 
@@ -27,17 +28,19 @@ public class LavaFluidMixin {
 
 	private static final double EPSILON = 1e-6;
 
+	private final Configuration configuration = Flowstone.getConfiguration();
+
 	private final List<Block> oreBlocksCache = Lists.newArrayList();
+	private long oreBlocksCacheVersion = 0L;
 
 	private final Map<Block, Block> blockToOreMapCache = Maps.newHashMap();
-
-	private double lowest = 0.05D; // in [0.0, HIGHEST_CHANCE]
-	private double highest = 0.5D; // in [LOWEST_CHANCE, 1.0]
-	private int limit = 45; // in [0, 98]
+	private long blockToOreMapCacheVersion = 0L;
 
 	@Redirect(method = "flow(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/Direction;Lnet/minecraft/fluid/FluidState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
 	public boolean setBlockStateProxy(IWorld world, BlockPos pos, BlockState state, int flags) {
-		reset();
+		double lowest = configuration.getMinChance();
+		double highest = configuration.getMaxChance();
+		int limit = configuration.getBlocksLimit();
 
 		List<Block> ores = Lists.newArrayList(getOreBlocks());
 		final int initialOres = ores.size();
@@ -58,17 +61,8 @@ public class LavaFluidMixin {
 		}
 	}
 
-	public void reset() {
-		oreBlocksCache.clear();
-		blockToOreMapCache.clear();
-
-		lowest = Configuration.getInstance().getMinChance();
-		highest = Configuration.getInstance().getMaxChance();
-		limit = Configuration.getInstance().getBlocksLimit();
-
-	}
-
 	private Collection<Block> getNearSotrageBlocks(IWorld world, BlockPos pos) {
+		int limit = configuration.getBlocksLimit();
 		Collection<Block> result = Lists.newArrayListWithCapacity(limit);
 		for (int x = -2; x <= 2; x++) {
 			for (int y = -2; y <= 2; y++) {
@@ -88,15 +82,20 @@ public class LavaFluidMixin {
 	}
 
 	private List<Block> getOreBlocks() {
-		if (oreBlocksCache.isEmpty())
-			Configuration.getInstance().getItems().stream().map(Item::getOre).map(Registry.BLOCK::get)
-					.forEach(oreBlocksCache::add);
+		if (oreBlocksCacheVersion != configuration.getVersion()) {
+			oreBlocksCacheVersion = configuration.getVersion();
+			oreBlocksCache.clear();
+			configuration.getItems().stream().map(Item::getOre).map(Registry.BLOCK::get).forEach(oreBlocksCache::add);
+		}
 		return oreBlocksCache;
 	}
 
 	private Map<Block, Block> getBlockToOreMap() {
-		if (blockToOreMapCache.isEmpty())
-			Configuration.getInstance().getItems().forEach(this::putShortcut);
+		if (blockToOreMapCacheVersion != configuration.getVersion()) {
+			blockToOreMapCacheVersion = configuration.getVersion();
+			blockToOreMapCache.clear();
+			configuration.getItems().forEach(this::putShortcut);
+		}
 		return blockToOreMapCache;
 	}
 

@@ -1,4 +1,4 @@
-package nivoridocs.flowstone.config;
+package nivoridocs.flowstone.config.custom;
 
 import java.util.Optional;
 import java.util.function.Function;

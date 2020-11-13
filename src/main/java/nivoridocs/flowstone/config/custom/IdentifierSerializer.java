@@ -1,4 +1,4 @@
-package nivoridocs.flowstone.config;
+package nivoridocs.flowstone.config.custom;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
