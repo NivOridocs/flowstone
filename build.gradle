@@ -14,9 +14,6 @@ minecraft {
 }
 
 repositories {
-    maven {
-        url = "https://maven.modmuss50.me/"
-    }
     mavenCentral()
 }
 
@@ -25,12 +22,20 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	
+
 	implementation "org.spongepowered:configurate-gson:${project.configurate_version}"
 	include "org.spongepowered:configurate-gson:${project.configurate_version}"
-	
+
 	implementation "javax.validation:validation-api:${project.validation_version}"
-	include "javax.validation:validation-api:${project.validation_version}"
+	implementation "org.hibernate.validator:hibernate-validator:${project.hibernate_validator_version}"
+	include "org.hibernate.validator:hibernate-validator:${project.hibernate_validator_version}"
+
+	implementation "javax.el:javax.el-api:${project.el_api_version}"
+	implementation "org.glassfish.web:javax.el:${project.el_version}"
+	include "org.glassfish.web:javax.el:${project.el_version}"
+	
+	compileOnly 'org.projectlombok:lombok:1.18.16'
+	annotationProcessor 'org.projectlombok:lombok:1.18.16'
 }
 
 processResources {
