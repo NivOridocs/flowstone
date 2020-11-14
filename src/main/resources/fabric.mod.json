@@ -9,6 +9,8 @@
   ],
   "contributors": [],
   "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/flowstone",
+    "issues": "https://github.com/nivoridocs/flowstone/issues",
     "sources": "https://github.com/nivoridocs/flowstone"
   },
   "license": "MIT",
