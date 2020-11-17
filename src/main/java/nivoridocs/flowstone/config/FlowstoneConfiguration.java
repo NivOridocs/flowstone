@@ -1,21 +1,16 @@
 package nivoridocs.flowstone.config;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.ConfigurationException;
 
-import com.google.common.collect.Sets;
-
-import lombok.NonNull;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -25,63 +20,70 @@ import nivoridocs.flowstone.Flowstone;
 import nivoridocs.flowstone.config.ConfigurationImpl.ItemImpl;
 
 public class FlowstoneConfiguration {
-	
-	private static final Logger log = LogManager.getLogger();
 
-	private final LongSupplier lastModifiedSupplier;
-	private long lastModified;
+	private static FlowstoneConfiguration instance = null;
 
-	private final ConfigurationLoader<? extends ConfigurationNode> loader;
-
-	private ConfigurationImpl instance;
-
-	private final Validator validator;
-
-	public FlowstoneConfiguration(final @NonNull LongSupplier lastModifiedSupplier,
-			final @NonNull ConfigurationLoader<? extends ConfigurationNode> loader,
-			final @NonNull Validator validator) {
-		this.lastModifiedSupplier = lastModifiedSupplier;
-		this.loader = loader;
-		this.validator = validator;
-
-		this.lastModified = this.lastModifiedSupplier.getAsLong();
+	public static final FlowstoneConfiguration getInstance() {
+		if (instance == null)
+			instance = new FlowstoneConfiguration();
+		return instance;
 	}
 
-	public void init() throws IOException, ObjectMappingException {
+	private static final Logger log = LogManager.getLogger();
+
+	private LongSupplier lastModifiedSupplier;
+	private long lastModified;
+
+	private ConfigurationLoader<? extends ConfigurationNode> loader;
+
+	private ConfigurationImpl configuration;
+
+	private FlowstoneConfiguration() {
+	}
+
+	public void load(final LongSupplier lastModifiedSupplier,
+			final ConfigurationLoader<? extends ConfigurationNode> loader)
+			throws IOException, ObjectMappingException {
+		this.lastModifiedSupplier = requireNonNull(lastModifiedSupplier, "lastModifiedSupplier");
+		this.loader = requireNonNull(loader, "loader");
+
+		this.lastModified = this.lastModifiedSupplier.getAsLong();
 		final ConfigurationNode node = loader.load();
-		instance = ConfigurationImpl.MAPPER.bind(newConfiguration()).populate(node);
+		this.configuration = ConfigurationImpl.MAPPER.bind(newConfiguration()).populate(node);
 
-		validate(instance);
+		validate(this.configuration);
 
-		ConfigurationImpl.MAPPER.bind(instance).serialize(node);
+		ConfigurationImpl.MAPPER.bind(this.configuration).serialize(node);
+		loader.save(node);
 	}
 
 	public Configuration getConfiguration() {
-		return new ConfigurationProxy(this::getInstance);
+		return new ConfigurationProxy(this::proxyInstance);
 	}
 
-	private Configuration getInstance() {
-		if (lastModified != lastModifiedSupplier.getAsLong()) {
-			lastModified = lastModifiedSupplier.getAsLong();
+	private Configuration proxyInstance() {
+		if (this.lastModified != this.lastModifiedSupplier.getAsLong()) {
+			this.lastModified = this.lastModifiedSupplier.getAsLong();
 			try {
-				final ConfigurationNode node = loader.load();
-				final ConfigurationImpl configuration = ConfigurationImpl.MAPPER.bind(newConfiguration()).populate(node);
+				final ConfigurationNode node = this.loader.load();
+				final ConfigurationImpl localConfiguration = ConfigurationImpl.MAPPER.bind(newConfiguration())
+						.populate(node);
 
-				validate(configuration);
-				
-				configuration.version = instance.version+1;
-				instance = configuration;
+				validate(localConfiguration);
+
+				this.configuration.version = localConfiguration.version + 1;
+				this.configuration = localConfiguration;
 			} catch (ObjectMappingException | ConfigurationException | IOException ex) {
 				log.warn("[{}] Unable to reload configurations: {}", Flowstone.MOD_ID, ex.getMessage(), ex);
 			}
 		}
-		return instance;
+		return this.configuration;
 	}
 
 	private ConfigurationImpl newConfiguration() {
-		ConfigurationImpl configuration = new ConfigurationImpl();
-		configuration.getItems().clear();
-		configuration.getItems()
+		ConfigurationImpl localConfiguration = new ConfigurationImpl();
+		localConfiguration.getItemsMutable().clear();
+		localConfiguration.getItemsMutable()
 				.addAll(Registry.BLOCK.getIds().stream().filter(id -> id.getPath().endsWith("_ore")).map(ore -> {
 					Identifier block = new Identifier(ore.getNamespace(),
 							ore.getPath().replaceFirst("_ore$", "_block"));
@@ -89,26 +91,11 @@ public class FlowstoneConfiguration {
 						return new ItemImpl(ore, Optional.of(block));
 					return new ItemImpl(ore, Optional.empty());
 				}).collect(Collectors.toSet()));
-		return configuration;
+		return localConfiguration;
 	}
 
 	private void validate(ConfigurationImpl configuration) {
-		final Set<ConstraintViolation<ConfigurationImpl>> violations = validator.validate(configuration);
-		final Set<String> errors = Sets.newTreeSet(String::compareTo);
-		for (ConstraintViolation<ConfigurationImpl> violation : violations)
-			errors.add(violation.getPropertyPath().toString().replace("[]", "") + " " + violation.getMessage());
-
-		if (configuration.getMinChance() > configuration.getMaxChance())
-			errors.add(String.format("minChance can't be greated than maxChance; minChance is %s, maxChance is %s",
-					configuration.getMinChance(), configuration.getMaxChance()));
-
-		if (!errors.isEmpty()) {
-			StringBuilder builder = new StringBuilder();
-			builder.append("Errors in the configuration file:");
-			for (String error : errors)
-				builder.append("\n\t").append(error);
-			throw new ConfigurationException(builder.toString());
-		}
+		
 	}
 
 }

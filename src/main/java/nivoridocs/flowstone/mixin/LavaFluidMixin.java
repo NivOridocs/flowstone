@@ -19,16 +19,16 @@ import net.minecraft.fluid.LavaFluid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
-import nivoridocs.flowstone.Flowstone;
 import nivoridocs.flowstone.config.Configuration;
 import nivoridocs.flowstone.config.Configuration.Item;
+import nivoridocs.flowstone.config.FlowstoneConfiguration;
 
 @Mixin(LavaFluid.class)
 public class LavaFluidMixin {
 
 	private static final double EPSILON = 1e-6;
 
-	private final Configuration configuration = Flowstone.getConfiguration();
+	private final Configuration configuration = FlowstoneConfiguration.getInstance().getConfiguration();
 
 	private final List<Block> oreBlocksCache = Lists.newArrayList();
 	private long oreBlocksCacheVersion = 0L;
