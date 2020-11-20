@@ -15,11 +15,6 @@ public final class ConfigurationProxy implements Configuration {
 	private final Supplier<Configuration> proxy;
 
 	@Override
-	public long getVersion() {
-		return proxy.get().getVersion();
-	}
-
-	@Override
 	public double getMinChance() {
 		return proxy.get().getMinChance();
 	}
@@ -35,7 +30,7 @@ public final class ConfigurationProxy implements Configuration {
 	}
 
 	@Override
-	public Collection<Item> getItems() {
+	public Collection<? extends Item> getItems() {
 		return ImmutableSet.copyOf(proxy.get().getItems());
 	}
 

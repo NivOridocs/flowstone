@@ -6,8 +6,6 @@ import java.util.Optional;
 import net.minecraft.util.Identifier;
 
 public interface Configuration {
-	
-	long getVersion();
 
 	double getMinChance();
 
@@ -15,7 +13,7 @@ public interface Configuration {
 
 	int getBlocksLimit();
 
-	Collection<Item> getItems();
+	Collection<? extends Item> getItems();
 
 	public interface Item {
 
