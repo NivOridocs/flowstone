@@ -31,10 +31,10 @@ public class LavaFluidMixin {
 	private final Configuration configuration = FlowstoneConfiguration.getInstance().getConfiguration();
 
 	private final List<Block> oreBlocksCache = Lists.newArrayList();
-	private long oreBlocksCacheVersion = 0L;
+	private int oreBlocksCacheHash = 0;
 
 	private final Map<Block, Block> blockToOreMapCache = Maps.newHashMap();
-	private long blockToOreMapCacheVersion = 0L;
+	private int blockToOreMapCacheHash = 0;
 
 	@Redirect(method = "flow(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/Direction;Lnet/minecraft/fluid/FluidState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
 	public boolean setBlockStateProxy(IWorld world, BlockPos pos, BlockState state, int flags) {
@@ -82,8 +82,8 @@ public class LavaFluidMixin {
 	}
 
 	private List<Block> getOreBlocks() {
-		if (oreBlocksCacheVersion != configuration.getVersion()) {
-			oreBlocksCacheVersion = configuration.getVersion();
+		if (oreBlocksCacheHash != configuration.hashCode()) {
+			oreBlocksCacheHash = configuration.hashCode();
 			oreBlocksCache.clear();
 			configuration.getItems().stream().map(Item::getOre).map(Registry.BLOCK::get).forEach(oreBlocksCache::add);
 		}
@@ -91,8 +91,8 @@ public class LavaFluidMixin {
 	}
 
 	private Map<Block, Block> getBlockToOreMap() {
-		if (blockToOreMapCacheVersion != configuration.getVersion()) {
-			blockToOreMapCacheVersion = configuration.getVersion();
+		if (blockToOreMapCacheHash != configuration.hashCode()) {
+			blockToOreMapCacheHash = configuration.hashCode();
 			blockToOreMapCache.clear();
 			configuration.getItems().forEach(this::putShortcut);
 		}

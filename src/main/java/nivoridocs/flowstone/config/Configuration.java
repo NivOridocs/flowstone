@@ -7,8 +7,6 @@ import net.minecraft.util.Identifier;
 
 public interface Configuration {
 
-	long getVersion();
-
 	double getMinChance();
 
 	double getMaxChance();
