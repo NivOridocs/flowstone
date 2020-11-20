@@ -23,9 +23,6 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	implementation(include("org.spongepowered:configurate-gson:${project.configurate_version}"))
-	include("org.spongepowered:configurate-core:${project.configurate_version}")
-	
 	compileOnly 'org.projectlombok:lombok:1.18.16'
 	annotationProcessor 'org.projectlombok:lombok:1.18.16'
 }

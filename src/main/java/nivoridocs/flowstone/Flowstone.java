@@ -1,17 +1,16 @@
 package nivoridocs.flowstone;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.ConfigurationException;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import net.minecraft.util.Identifier;
 import nivoridocs.flowstone.config.FlowstoneConfiguration;
 
 public class Flowstone implements ModInitializer {
@@ -25,21 +24,12 @@ public class Flowstone implements ModInitializer {
 	public void onInitialize() {
 		log.info("[{}] Initializing", MOD_NAME);
 
-		final Path path = FabricLoader.getInstance().getConfigDir().resolve(Flowstone.MOD_ID + "-configuration.json")
+		final Path path = FabricLoader.getInstance().getConfigDir().resolve(Flowstone.MOD_ID + "-config.json")
 				.toAbsolutePath();
-		final File file = path.toFile();
-		final GsonConfigurationLoader loader = GsonConfigurationLoader.builder().setPath(path).build();
+		Gson gson = new GsonBuilder().registerTypeAdapter(Identifier.class, new IdentifierAdapter()).setPrettyPrinting()
+				.create();
 
-		try {
-			FlowstoneConfiguration.getInstance().load(file::lastModified, loader);
-		} catch (IOException | ObjectMappingException ex) {
-			log.error("[{}] {}", MOD_ID, ex.getMessage());
-			throw new ConfigurationException(ex);
-		} catch (ConfigurationException ex) {
-			log.error("[{}] {}", MOD_ID, ex.getMessage());
-			throw ex;
-		}
-
+		FlowstoneConfiguration.getInstance().load(gson, path);
 	}
 
 }

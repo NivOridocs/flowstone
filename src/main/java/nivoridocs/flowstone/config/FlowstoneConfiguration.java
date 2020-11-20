@@ -1,22 +1,26 @@
 package nivoridocs.flowstone.config;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.LongSupplier;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.ConfigurationException;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import nivoridocs.flowstone.Flowstone;
+import nivoridocs.flowstone.config.Configuration.Item;
 import nivoridocs.flowstone.config.ConfigurationImpl.ItemImpl;
 
 public class FlowstoneConfiguration {
@@ -31,30 +35,49 @@ public class FlowstoneConfiguration {
 
 	private static final Logger log = LogManager.getLogger();
 
-	private LongSupplier lastModifiedSupplier;
+	private Gson gson;
+	private File configurationFile;
 	private long lastModified;
-
-	private ConfigurationLoader<? extends ConfigurationNode> loader;
 
 	private ConfigurationImpl configuration;
 
 	private FlowstoneConfiguration() {
 	}
 
-	public void load(final LongSupplier lastModifiedSupplier,
-			final ConfigurationLoader<? extends ConfigurationNode> loader)
-			throws IOException, ObjectMappingException {
-		this.lastModifiedSupplier = requireNonNull(lastModifiedSupplier, "lastModifiedSupplier");
-		this.loader = requireNonNull(loader, "loader");
+	public void load(Gson gson, Path path) {
+		this.gson = requireNonNull(gson, "gson");
+		this.configurationFile = requireNonNull(path, "path").toFile();
 
-		this.lastModified = this.lastModifiedSupplier.getAsLong();
-		final ConfigurationNode node = loader.load();
-		this.configuration = ConfigurationImpl.MAPPER.bind(newConfiguration()).populate(node);
+		this.lastModified = configurationFile.lastModified();
 
-		validate(this.configuration);
+		this.configuration = newConfiguration();
 
-		ConfigurationImpl.MAPPER.bind(this.configuration).serialize(node);
-		loader.save(node);
+		if (configurationFile.exists()) {
+			final ConfigurationImpl config = gson.fromJson(runtimeReader(configurationFile), ConfigurationImpl.class);
+			if (isValid(config))
+				this.configuration = config;
+			else
+				log.warn("Invalid file configuration; default configuration will be used insted");
+		} else {
+			this.configuration = newConfiguration();
+			gson.toJson(configuration, ConfigurationImpl.class, runtimeWriter(configurationFile));
+		}
+	}
+
+	private FileReader runtimeReader(File file) {
+		try {
+			return new FileReader(file);
+		} catch (FileNotFoundException ex) {
+			throw new JsonIOException(ex.getMessage(), ex);
+		}
+	}
+
+	private FileWriter runtimeWriter(File file) {
+		try {
+			return new FileWriter(file);
+		} catch (IOException ex) {
+			throw new JsonIOException(ex.getMessage(), ex);
+		}
 	}
 
 	public Configuration getConfiguration() {
@@ -62,18 +85,18 @@ public class FlowstoneConfiguration {
 	}
 
 	private Configuration proxyInstance() {
-		if (this.lastModified != this.lastModifiedSupplier.getAsLong()) {
-			this.lastModified = this.lastModifiedSupplier.getAsLong();
+		long newLastModified = configurationFile.lastModified();
+		if (this.lastModified != newLastModified) {
+			this.lastModified = newLastModified;
 			try {
-				final ConfigurationNode node = this.loader.load();
-				final ConfigurationImpl localConfiguration = ConfigurationImpl.MAPPER.bind(newConfiguration())
-						.populate(node);
-
-				validate(localConfiguration);
-
-				this.configuration.version = localConfiguration.version + 1;
-				this.configuration = localConfiguration;
-			} catch (ObjectMappingException | ConfigurationException | IOException ex) {
+				final ConfigurationImpl localConfiguration = gson.fromJson(new FileReader(configurationFile),
+						ConfigurationImpl.class);
+				if (isValid(localConfiguration)) {
+					this.configuration.setVersion(localConfiguration.getVersion() + 1);
+					this.configuration = localConfiguration;
+				} else
+					log.warn("Invalid file configuration; older configuration will be used insted");
+			} catch (IOException ex) {
 				log.warn("[{}] Unable to reload configurations: {}", Flowstone.MOD_ID, ex.getMessage(), ex);
 			}
 		}
@@ -82,20 +105,29 @@ public class FlowstoneConfiguration {
 
 	private ConfigurationImpl newConfiguration() {
 		ConfigurationImpl localConfiguration = new ConfigurationImpl();
-		localConfiguration.getItemsMutable().clear();
-		localConfiguration.getItemsMutable()
-				.addAll(Registry.BLOCK.getIds().stream().filter(id -> id.getPath().endsWith("_ore")).map(ore -> {
+		localConfiguration
+				.setItems(Registry.BLOCK.getIds().stream().filter(id -> id.getPath().endsWith("_ore")).map(ore -> {
 					Identifier block = new Identifier(ore.getNamespace(),
 							ore.getPath().replaceFirst("_ore$", "_block"));
-					if (Registry.BLOCK.containsId(block))
-						return new ItemImpl(ore, Optional.of(block));
-					return new ItemImpl(ore, Optional.empty());
-				}).collect(Collectors.toSet()));
+					return new ItemImpl(ore, Optional.of(block).filter(Registry.BLOCK::containsId));
+				}).collect(toList()));
 		return localConfiguration;
 	}
 
-	private void validate(ConfigurationImpl configuration) {
-		
+	private boolean isValid(Configuration value) {
+		if (value.getMinChance() < .0d || value.getMinChance() > value.getMaxChance() || value.getMaxChance() > 1.0d)
+			return false;
+
+		if (value.getBlocksLimit() < 0 || value.getBlocksLimit() > 98)
+			return false;
+
+		for (Item item : value.getItems()) {
+			if (!Registry.BLOCK.containsId(item.getOre())
+					|| !item.getBlock().filter(Registry.BLOCK::containsId).isPresent())
+				return false;
+		}
+
+		return true;
 	}
 
 }

@@ -1,75 +1,48 @@
 package nivoridocs.flowstone.config;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import net.minecraft.util.Identifier;
-import ninja.leaping.configurate.objectmapping.ObjectMapper;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import ninja.leaping.configurate.objectmapping.Setting;
-import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
-@ConfigSerializable
-@Getter
-@ToString
-@EqualsAndHashCode
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
 public final class ConfigurationImpl implements Configuration {
 
-	static final ObjectMapper<ConfigurationImpl> MAPPER;
+	private long version = 0;
 
-	static {
-		try {
-			MAPPER = ObjectMapper.forClass(ConfigurationImpl.class);
-		} catch (ObjectMappingException ex) {
-			throw new ExceptionInInitializerError(ex);
-		}
-	}
-
-	long version;
-
-	@Setting
 	private double minChance = .05d;
 
-	@Setting
 	private double maxChance = .5d;
 
-	@Setting
 	private int blocksLimit = 45;
 
-	@Setting
-	private Collection<Item> items = Sets.newHashSet();
-	
-	final Collection<Item> getItemsMutable() {
-		return items;
-	}
+	@NotNull
+	private List<ItemImpl> items = Lists.newArrayList();
 
 	@Override
-	public Collection<Item> getItems() {
+	public Collection<? extends Item> getItems() {
 		return ImmutableSet.copyOf(items);
 	}
 
-	@ConfigSerializable
-	@Getter
-	@ToString
-	@EqualsAndHashCode
-	@AllArgsConstructor
+	@Data
 	@NoArgsConstructor
+	@AllArgsConstructor
 	public static class ItemImpl implements Configuration.Item {
 
-		@Setting
+		@NotNull
 		private Identifier ore;
 
-		@Setting
+		@NotNull
 		private Optional<Identifier> block;
 
 	}

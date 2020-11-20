@@ -35,7 +35,7 @@ public final class ConfigurationProxy implements Configuration {
 	}
 
 	@Override
-	public Collection<Item> getItems() {
+	public Collection<? extends Item> getItems() {
 		return ImmutableSet.copyOf(proxy.get().getItems());
 	}
 
