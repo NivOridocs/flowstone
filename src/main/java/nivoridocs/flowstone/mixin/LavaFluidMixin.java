@@ -28,8 +28,6 @@ public class LavaFluidMixin {
 
 	private static final double EPSILON = 1e-6;
 
-	private final Configuration configuration = FlowstoneConfiguration.getInstance().getConfiguration();
-
 	private final List<Block> oreBlocksCache = Lists.newArrayList();
 	private int oreBlocksCacheHash = 0;
 
@@ -38,9 +36,9 @@ public class LavaFluidMixin {
 
 	@Redirect(method = "flow(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/Direction;Lnet/minecraft/fluid/FluidState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
 	public boolean setBlockStateProxy(IWorld world, BlockPos pos, BlockState state, int flags) {
-		double lowest = configuration.getMinChance();
-		double highest = configuration.getMaxChance();
-		int limit = configuration.getBlocksLimit();
+		double lowest = getConfiguration().getMinChance();
+		double highest = getConfiguration().getMaxChance();
+		int limit = getConfiguration().getBlocksLimit();
 
 		List<Block> ores = Lists.newArrayList(getOreBlocks());
 		final int initialOres = ores.size();
@@ -62,7 +60,7 @@ public class LavaFluidMixin {
 	}
 
 	private Collection<Block> getNearSotrageBlocks(IWorld world, BlockPos pos) {
-		int limit = configuration.getBlocksLimit();
+		int limit = getConfiguration().getBlocksLimit();
 		Collection<Block> result = Lists.newArrayListWithCapacity(limit);
 		for (int x = -2; x <= 2; x++) {
 			for (int y = -2; y <= 2; y++) {
@@ -82,19 +80,20 @@ public class LavaFluidMixin {
 	}
 
 	private List<Block> getOreBlocks() {
-		if (oreBlocksCacheHash != configuration.hashCode()) {
-			oreBlocksCacheHash = configuration.hashCode();
+		if (oreBlocksCacheHash != getConfiguration().hashCode()) {
+			oreBlocksCacheHash = getConfiguration().hashCode();
 			oreBlocksCache.clear();
-			configuration.getItems().stream().map(Item::getOre).map(Registry.BLOCK::get).forEach(oreBlocksCache::add);
+			getConfiguration().getItems().stream().map(Item::getOre).map(Registry.BLOCK::get)
+					.forEach(oreBlocksCache::add);
 		}
 		return oreBlocksCache;
 	}
 
 	private Map<Block, Block> getBlockToOreMap() {
-		if (blockToOreMapCacheHash != configuration.hashCode()) {
-			blockToOreMapCacheHash = configuration.hashCode();
+		if (blockToOreMapCacheHash != getConfiguration().hashCode()) {
+			blockToOreMapCacheHash = getConfiguration().hashCode();
 			blockToOreMapCache.clear();
-			configuration.getItems().forEach(this::putShortcut);
+			getConfiguration().getItems().forEach(this::putShortcut);
 		}
 		return blockToOreMapCache;
 	}
@@ -104,6 +103,10 @@ public class LavaFluidMixin {
 		Optional<Block> ore = Registry.BLOCK.getOrEmpty(item.getOre());
 		if (block.isPresent() && ore.isPresent())
 			blockToOreMapCache.put(block.get(), ore.get());
+	}
+
+	private Configuration getConfiguration() {
+		return FlowstoneConfiguration.getInstance().getConfiguration();
 	}
 
 }
