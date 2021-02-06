@@ -5,12 +5,11 @@
   "name": "Flowstone",
   "description": "When lava and water meet",
   "authors": [
-    "Niv_Oridocs"
+    "Niv Oridocs"
   ],
   "contributors": [],
   "contact": {
     "homepage": "https://www.curseforge.com/minecraft/mc-mods/flowstone",
-    "issues": "https://github.com/nivoridocs/flowstone/issues",
     "sources": "https://github.com/nivoridocs/flowstone"
   },
   "license": "MIT",
@@ -18,7 +17,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "nivoridocs.flowstone.Flowstone"
+      "niv.flowstone.FlowstoneMod"
     ],
     "client": [],
     "server": []
@@ -27,6 +26,7 @@
     "flowstone.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.10.1"
+    "fabricloader": ">=0.11.1",
+    "fabric": "*"
   }
 }

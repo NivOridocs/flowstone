@@ -1,19 +1,21 @@
-*
-!*/
+#Gradle
+.gradle/
+build/
+out/
+classes/
 
-# Git
-!/.gitignore
-!/LICENSE
-!/README.md
+#IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
 
-# Source
-!/src/**
+#vscode
+.settings/
+.vscode/
+bin/
+.classpath
+.project
 
-# Gradle
-!/gradle/**
-!/build.gradle
-!/gradle.properties
-!/gradlew
-!/gradlew.bat
-/.gradle/
-/build/
+#fabric
+run/
