@@ -1,8 +1,10 @@
 {
   "required": true,
   "package": "niv.flowstone.mixin",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [],
+  "compatibilityLevel": "JAVA_11",
+  "mixins": [
+    "LavaFluidMixin"
+  ],
   "client": [],
   "server": [],
   "injectors": {
