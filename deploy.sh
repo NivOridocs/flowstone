@@ -1,9 +1,9 @@
 #!/bin/sh
 
-TARGET=$(git config --local deploy.target)
+TARGET=$1
 
 if [ ! $TARGET ]; then
-  echo "Error: Missing 'deploy.target' local git configuration"
+  echo "Error: Missing argument"
   exit 1
 fi
 
