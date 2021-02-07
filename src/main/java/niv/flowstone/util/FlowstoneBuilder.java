@@ -1,8 +1,6 @@
 package niv.flowstone.util;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import net.minecraft.world.biome.GenerationSettings;
 import net.minecraft.world.biome.GenerationSettings.Builder;
 import net.minecraft.world.gen.GenerationStep.Feature;
@@ -10,18 +8,25 @@ import net.minecraft.world.gen.feature.ConfiguredFeature;
 
 public class FlowstoneBuilder extends GenerationSettings.Builder {
 
-	public final static AtomicBoolean NET = new AtomicBoolean(false);
+	private static final FlowstoneBuilder INSTANCE = new FlowstoneBuilder();
 
-	private final BiConsumer<Feature, ConfiguredFeature<?, ?>> proxyConsumer;
+	private final ThreadLocal<BiConsumer<Feature, ConfiguredFeature<?, ?>>> localProxyConsumer;
 
-	public FlowstoneBuilder(BiConsumer<Feature, ConfiguredFeature<?, ?>> proxyConsumer) {
-		this.proxyConsumer = proxyConsumer;
+	private FlowstoneBuilder() {
+		localProxyConsumer = ThreadLocal.withInitial(() -> (x, feature) -> {
+		});
 	}
 
 	@Override
 	public Builder feature(Feature featureStep, ConfiguredFeature<?, ?> feature) {
-		proxyConsumer.accept(featureStep, feature);
+		localProxyConsumer.get().accept(featureStep, feature);
 		return this;
+	}
+
+	public static final GenerationSettings.Builder proxy(
+			BiConsumer<Feature, ConfiguredFeature<?, ?>> proxyConsumer) {
+		INSTANCE.localProxyConsumer.set(proxyConsumer);
+		return INSTANCE;
 	}
 
 }

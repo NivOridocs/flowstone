@@ -3,7 +3,8 @@
   "package": "niv.flowstone.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
-    "LavaFluidMixin"
+    "LavaFluidMixin",
+    "UniformIntDistributionHook"
   ],
   "client": [],
   "server": [],

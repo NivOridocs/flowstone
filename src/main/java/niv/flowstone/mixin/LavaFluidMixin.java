@@ -1,14 +1,16 @@
 package niv.flowstone.mixin;
 
+import java.util.ArrayList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.fluid.LavaFluid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldAccess;
-import net.minecraft.world.gen.feature.DefaultBiomeFeatures;
-import niv.flowstone.util.FlowstoneBuilder;
+import niv.flowstone.util.FlowstoneGenerator;
+import niv.flowstone.util.FlowstoneGenerators;
 
 @Mixin(LavaFluid.class)
 public class LavaFluidMixin {
@@ -23,13 +25,25 @@ public class LavaFluidMixin {
 	public boolean setBlockStateProxy(WorldAccess world, BlockPos pos, BlockState state,
 			int flags) {
 
-		var builder = new FlowstoneBuilder((x, feature) -> {
-			
-		});
+		var states = new ArrayList<BlockState>();
 
-		DefaultBiomeFeatures.addDefaultOres(builder);
-		DefaultBiomeFeatures.addEmeraldOre(builder);
+		var magmaCount = 0;
 
+		for (int x = -2; x <= 2; x++)
+			for (int y = -2; y <= 2; y++)
+				for (int z = -2; z <= 2; z++)
+					if (world
+							.getBlockState(
+									new BlockPos(pos.getX() + x, pos.getY() + y, pos.getZ() + z))
+							.isOf(Blocks.MAGMA_BLOCK))
+						magmaCount++;
+
+		for (FlowstoneGenerator gen : FlowstoneGenerators.all())
+			if (gen.isValidPos(world, pos))
+				gen.generateOre(world, magmaCount).ifPresent(states::add);
+
+		if (!states.isEmpty())
+			state = states.get(world.getRandom().nextInt(states.size()));
 		return world.setBlockState(pos, state, flags);
 	}
 
