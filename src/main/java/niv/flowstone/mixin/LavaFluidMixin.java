@@ -25,25 +25,25 @@ public class LavaFluidMixin {
 	public boolean setBlockStateProxy(WorldAccess world, BlockPos pos, BlockState state,
 			int flags) {
 
-		var states = new ArrayList<BlockState>();
+		if (state.getBlock().is(Blocks.STONE)) {
+			var states = new ArrayList<BlockState>();
+			var magmaCount = 0;
 
-		var magmaCount = 0;
+			for (int x = -2; x <= 2; x++)
+				for (int y = -2; y <= 2; y++)
+					for (int z = -2; z <= 2; z++)
+						if (world.getBlockState(
+								new BlockPos(pos.getX() + x, pos.getY() + y, pos.getZ() + z))
+								.isOf(Blocks.MAGMA_BLOCK))
+							magmaCount++;
 
-		for (int x = -2; x <= 2; x++)
-			for (int y = -2; y <= 2; y++)
-				for (int z = -2; z <= 2; z++)
-					if (world
-							.getBlockState(
-									new BlockPos(pos.getX() + x, pos.getY() + y, pos.getZ() + z))
-							.isOf(Blocks.MAGMA_BLOCK))
-						magmaCount++;
+			for (FlowstoneGenerator gen : FlowstoneGenerators.allFor(world, pos))
+				if (gen.isValidPos(world, pos))
+					gen.generateOre(world, magmaCount).ifPresent(states::add);
 
-		for (FlowstoneGenerator gen : FlowstoneGenerators.all())
-			if (gen.isValidPos(world, pos))
-				gen.generateOre(world, magmaCount).ifPresent(states::add);
-
-		if (!states.isEmpty())
-			state = states.get(world.getRandom().nextInt(states.size()));
+			if (!states.isEmpty())
+				state = states.get(world.getRandom().nextInt(states.size()));
+		}
 		return world.setBlockState(pos, state, flags);
 	}
 
