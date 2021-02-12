@@ -1,18 +1,20 @@
 package nivoridocs.flowstone;
 
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
-import nivoridocs.flowstone.config.FlowstoneConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-@Mod(Flowstone.MODID)
-public class Flowstone {
+import net.fabricmc.api.ModInitializer;
 
-	public static final String MODID = "flowstone";
+public class Flowstone implements ModInitializer {
 
-	public Flowstone() {
-		FlowstoneConfig.setup();
+	private static final Logger log = LogManager.getLogger();
 
-		MinecraftForge.EVENT_BUS.register(new FlowstoneEventHandler());
+	public static final String MOD_ID = "flowstone";
+	public static final String MOD_NAME = "Flowstone";
+
+	@Override
+	public void onInitialize() {
+		log.info("[{}] Initializing", MOD_NAME);
 	}
 
 }
