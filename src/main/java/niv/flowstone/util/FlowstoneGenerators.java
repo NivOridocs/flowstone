@@ -33,7 +33,7 @@ public class FlowstoneGenerators {
 		var features = biome.getGenerationSettings().getFeatures();
 		var index = GenerationStep.Feature.UNDERGROUND_ORES.ordinal();
 		List<FlowstoneGenerator> generators = new ArrayList<FlowstoneGenerator>();
-		if (features.size() <= index) {
+		if (features.size() > index) {
 			generators = features.get(index).stream().map(Supplier::get)
 					.map(FlowstoneGenerators::createGenerator).filter(Optional::isPresent)
 					.map(Optional::get).collect(Collectors.toList());

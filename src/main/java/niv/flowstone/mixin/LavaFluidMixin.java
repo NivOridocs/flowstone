@@ -41,8 +41,8 @@ public class LavaFluidMixin {
 				if (gen.isValidPos(world, pos))
 					gen.generateOre(world, magmaCount).ifPresent(states::add);
 
-			if (!states.isEmpty())
-				state = states.get(world.getRandom().nextInt(states.size()));
+			states.add(state);
+			state = states.get(world.getRandom().nextInt(states.size()));
 		}
 		return world.setBlockState(pos, state, flags);
 	}
