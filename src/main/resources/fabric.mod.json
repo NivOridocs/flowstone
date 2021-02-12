@@ -3,7 +3,7 @@
   "id": "flowstone",
   "version": "${version}",
   "name": "Flowstone",
-  "description": "When lava and water meet",
+  "description": "Add the chance for lava to generate biome and height specific ores instead of stone.",
   "authors": [
     "Niv Oridocs"
   ],
