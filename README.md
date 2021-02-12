@@ -1,2 +1,4 @@
 # Flowstone
-This is a mod for Minecraft Fabric and it allows to generate different blocks when water and lava meet, and it's configurable! For more info read the wiki.
+This Minecraft Fabric mod adds the chance for lava to generate biome and height specific ores instead of stone.
+
+Link to CurseForge project: https://www.curseforge.com/minecraft/mc-mods/flowstone
