@@ -30,8 +30,9 @@ public class FlowstoneGenerators {
 	}
 
 	private static final List<FlowstoneGenerator> getBiomeGenerators(Biome biome) {
-		var features = biome.getGenerationSettings().getFeatures();
-		var index = GenerationStep.Feature.UNDERGROUND_ORES.ordinal();
+		List<List<Supplier<ConfiguredFeature<?, ?>>>> features =
+				biome.getGenerationSettings().getFeatures();
+		int index = GenerationStep.Feature.UNDERGROUND_ORES.ordinal();
 		List<FlowstoneGenerator> generators = new ArrayList<FlowstoneGenerator>();
 		if (features.size() > index) {
 			generators = features.get(index).stream().map(Supplier::get)
@@ -44,27 +45,27 @@ public class FlowstoneGenerators {
 	private static final Optional<FlowstoneGenerator> createGenerator(
 			ConfiguredFeature<?, ?> feature) {
 		BlockState state = null;
-		var minY = 0;
-		var maxY = 0;
-		var veins = 1;
-		var repeats = 1;
+		int minY = 0;
+		int maxY = 0;
+		int veins = 1;
+		int repeats = 1;
 
-		var featureConfig = feature.config;
+		Object featureConfig = feature.config;
 
 		while (featureConfig instanceof DecoratedFeatureConfig) {
-			var decoratedFeatureConfig = (DecoratedFeatureConfig) featureConfig;
+			DecoratedFeatureConfig decoratedFeatureConfig = (DecoratedFeatureConfig) featureConfig;
 
-			var decoratorConfig = decoratedFeatureConfig.decorator.getConfig();
+			Object decoratorConfig = decoratedFeatureConfig.decorator.getConfig();
 			if (decoratorConfig instanceof CountConfig) {
 				repeats = Math.max(1, 1
 						+ ((UniformIntDistributionHook) ((CountConfig) decoratorConfig).getCount())
 								.getBase());
 			} else if (decoratorConfig instanceof RangeDecoratorConfig) {
-				var aux = (RangeDecoratorConfig) decoratorConfig;
+				RangeDecoratorConfig aux = (RangeDecoratorConfig) decoratorConfig;
 				minY = Math.max(0, aux.topOffset);
 				maxY = Math.max(minY, aux.maximum);
 			} else if (decoratorConfig instanceof DepthAverageDecoratorConfig) {
-				var aux = (DepthAverageDecoratorConfig) decoratorConfig;
+				DepthAverageDecoratorConfig aux = (DepthAverageDecoratorConfig) decoratorConfig;
 				minY = Math.max(0, aux.baseline - (aux.spread / 2));
 				maxY = Math.max(minY, minY + aux.spread);
 			}
@@ -73,7 +74,7 @@ public class FlowstoneGenerators {
 		}
 
 		if (featureConfig instanceof OreFeatureConfig) {
-			var aux = (OreFeatureConfig) featureConfig;
+			OreFeatureConfig aux = (OreFeatureConfig) featureConfig;
 			state = aux.state;
 			veins = Math.max(1, aux.size);
 		}
