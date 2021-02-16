@@ -26,8 +26,8 @@ public class LavaFluidMixin {
 			int flags) {
 
 		if (state.getBlock().is(Blocks.STONE)) {
-			var states = new ArrayList<BlockState>();
-			var magmaCount = 0;
+			ArrayList<BlockState> states = new ArrayList<>();
+			int magmaCount = 0;
 
 			for (int x = -2; x <= 2; x++)
 				for (int y = -2; y <= 2; y++)
