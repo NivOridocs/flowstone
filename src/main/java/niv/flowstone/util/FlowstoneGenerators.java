@@ -8,8 +8,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.OreBlock;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.WorldAccess;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.CountConfig;
@@ -79,7 +79,7 @@ public class FlowstoneGenerators {
 			veins = Math.max(1, aux.size);
 		}
 
-		if (state != null && state.getBlock() instanceof OreBlock)
+		if (state != null && Registry.BLOCK.getId(state.getBlock()).getPath().endsWith("_ore"))
 			return Optional.of(new SimpleFlowstonGenerator(state, minY, maxY, veins * repeats));
 		else
 			return Optional.empty();
