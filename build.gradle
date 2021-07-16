@@ -1,6 +1,10 @@
 plugins {
 	id 'fabric-loom' version '0.8-SNAPSHOT'
 	id 'maven-publish'
+
+	// Plugin to publish on Modrinth
+	id "com.modrinth.minotaur" version "1.2.1"
+
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
@@ -81,4 +85,20 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+import com.modrinth.minotaur.TaskModrinthUpload
+
+task publishModrinth (type: TaskModrinthUpload) {
+	onlyIf {
+		System.getenv("MODRINTH")
+	}
+
+	token = System.getenv("MODRINTH")
+	projectId = 'yT1pBihO'
+	versionNumber = project.version
+	versionName = "Flowstone ${project.version}"
+	uploadFile = remapJar
+	addGameVersion(project.minecraft_version)
+	addLoader('fabric')
 }

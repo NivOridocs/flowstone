@@ -1,4 +1,5 @@
 # Flowstone
-This Minecraft Fabric mod adds the chance for lava to generate biome and height specific ores instead of stone.
+Flowstone is a mod for Fabric that adds a chance to generate an ore block whenever lava and water would otherwise generate a stone block.
 
-Link to CurseForge project: https://www.curseforge.com/minecraft/mc-mods/flowstone
+Link to Modrinth: https://modrinth.com/mod/flowstone
+Link to CurseForge: https://www.curseforge.com/minecraft/mc-mods/flowstone
