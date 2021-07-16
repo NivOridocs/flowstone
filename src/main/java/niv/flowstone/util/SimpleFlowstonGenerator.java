@@ -8,24 +8,43 @@ import net.minecraft.world.WorldAccess;
 public class SimpleFlowstonGenerator implements FlowstoneGenerator {
 	private final static int CHUNK = 16 * 16;
 
+	private final int zero;
+	private final int low;
+	private final int medium;
+	private final int high;
+	private final int bound;
+
 	private final BlockState state;
-	private final int minY;
-	private final int maxY;
 	private final int volume;
 	private final int density;
 
-	public SimpleFlowstonGenerator(BlockState state, int minY, int maxY, int density) {
+	public SimpleFlowstonGenerator(BlockState state, int minY, int maxY, int plateau, int density) {
 		this.state = state;
-		this.minY = minY;
-		this.maxY = maxY;
-		this.density = density;
+		this.zero = minY;
+		this.high = maxY - minY;
 
-		this.volume = (this.maxY - this.minY) * CHUNK;
+		plateau = Math.min(plateau, high);
+		plateau = Math.max(0, plateau);
+
+		this.low = (high - plateau) / 2;
+		this.medium = high - low;
+		this.bound = low + 1;
+
+		this.volume = this.medium * CHUNK;
+		this.density = density;
 	}
 
 	@Override
 	public boolean isValidPos(WorldAccess world, BlockPos pos) {
-		return pos.getY() >= minY && pos.getY() <= maxY;
+		int y = pos.getY() - zero;
+		if (y >= 0 && y < low)
+			return world.getRandom().nextInt(bound) < (y + 1);
+		else if (y >= low && y <= medium)
+			return true;
+		else if (y > medium && y <= high)
+			return world.getRandom().nextInt(bound) < (high - y + 1);
+		else
+			return false;
 	}
 
 	@Override

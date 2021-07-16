@@ -24,8 +24,7 @@ public class LavaFluidMixin {
 							+ "Lnet/minecraft/block/BlockState;" + "I" + ")Z"))
 	public boolean setBlockStateProxy(WorldAccess world, BlockPos pos, BlockState state,
 			int flags) {
-
-		if (state.getBlock().is(Blocks.STONE)) {
+		if (state.getBlock().equals(Blocks.STONE)) {
 			ArrayList<BlockState> states = new ArrayList<>();
 			int magmaCount = 0;
 
