@@ -3,13 +3,13 @@
   "id": "flowstone",
   "version": "${version}",
   "name": "Flowstone",
-  "description": "Add the chance for lava to generate biome and height specific ores instead of stone.",
+  "description": "Adds a chance to generate an ore block whenever lava and water would otherwise generate a stone block.",
   "authors": [
     "Niv Oridocs"
   ],
   "contributors": [],
   "contact": {
-    "homepage": "https://www.curseforge.com/minecraft/mc-mods/flowstone",
+    "homepage": "https://modrinth.com/mod/flowstone",
     "sources": "https://github.com/nivoridocs/flowstone"
   },
   "license": "MIT",
