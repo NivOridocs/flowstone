@@ -1,0 +1,22 @@
+{
+    "block": "minecraft:emerald_ore",
+    "configurations": [
+        {
+            "biomes": [
+                "minecraft:meadow",
+                "minecraft:grove",
+                "minecraft:snowy_slopes",
+                "minecraft:jagged_peaks",
+                "minecraft:frozen_peaks",
+                "minecraft:stony_peaks",
+                "minecraft:windswept_hills",
+                "minecraft:windswept_gravelly_hills",
+                "minecraft:windswept_forest"
+            ],
+            "min": -16,
+            "max": 480,
+            "plateau": 0,
+            "density": 300
+        }
+    ]
+}

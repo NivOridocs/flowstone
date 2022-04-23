@@ -1,0 +1,30 @@
+{
+    "block": "minecraft:gold_ore",
+    "configurations": [
+        {
+            "biomes": [
+                "minecraft:badlands",
+                "minecraft:eroded_badlands",
+                "minecraft:wooded_badlands"
+            ],
+            "min": 32,
+            "max": 256,
+            "plateau": null,
+            "density": 450
+        },
+        {
+            "biomes": [],
+            "min": -64,
+            "max": 32,
+            "plateau": 0,
+            "density": 36
+        },
+        {
+            "biomes": [],
+            "min": -64,
+            "max": -48,
+            "plateau": null,
+            "density": 510
+        }
+    ]
+}

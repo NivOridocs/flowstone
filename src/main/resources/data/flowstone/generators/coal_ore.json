@@ -1,0 +1,19 @@
+{
+    "block": "minecraft:coal_ore",
+    "configurations": [
+        {
+            "biomes": [],
+            "min": 136,
+            "max": 256,
+            "plateau": null,
+            "density": 510
+        },
+        {
+            "biomes": [],
+            "min": 0,
+            "max": 192,
+            "plateau": 0,
+            "density": 510
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+{
+    "block": "minecraft:diamond_ore",
+    "configurations": [
+        {
+            "biomes": [],
+            "min": -114,
+            "max": 16,
+            "plateau": 0,
+            "density": 28
+        },
+        {
+            "biomes": [],
+            "min": -114,
+            "max": 16,
+            "plateau": 0,
+            "density": 108
+        },
+        {
+            "biomes": [],
+            "min": -114,
+            "max": 16,
+            "plateau": 0,
+            "density": 32
+        }
+    ]
+}
