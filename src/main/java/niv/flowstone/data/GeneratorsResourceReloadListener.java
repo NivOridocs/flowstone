@@ -1,6 +1,8 @@
 package niv.flowstone.data;
 
 import static niv.flowstone.FlowstoneMod.MOD_ID;
+import static niv.flowstone.FlowstoneMod.MOD_NAME;
+import static niv.flowstone.FlowstoneMod.log;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,7 +15,6 @@ import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
-import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.Registry;
 import niv.flowstone.util.Generator;
 import niv.flowstone.util.Generators;
@@ -37,6 +38,7 @@ public class GeneratorsResourceReloadListener implements SimpleSynchronousResour
 
     @Override
     public void reload(ResourceManager manager) {
+        Generators.clear();
         for (var identifier : manager.findResources(GENERATORS, path -> path.endsWith(".json"))) {
             try {
                 for (var resource : manager.getAllResources(identifier)) {
@@ -44,9 +46,9 @@ public class GeneratorsResourceReloadListener implements SimpleSynchronousResour
                     var generatorResource = JsonHelper.deserialize(GSON, reader, GeneratorResource.class);
                     process(generatorResource);
                 }
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (IOException ex) {
+                log.warn("[{}] Unable to load any generator for resource {}, it will be skipped. Cause: {}",
+                        MOD_NAME, identifier, ex.getMessage());
             }
         }
     }
@@ -54,7 +56,6 @@ public class GeneratorsResourceReloadListener implements SimpleSynchronousResour
     private void process(GeneratorResource generatorResource) {
         var blockstate = Registry.BLOCK.get(new Identifier(generatorResource.getBlock())).getDefaultState();
         for (var configurationResource : generatorResource.getConfigurations()) {
-
             var generator = configurationResource.getPlateau() == null
                     ? new Generator(blockstate, configurationResource.getMin(), configurationResource.getMax(),
                             configurationResource.getDensity())
@@ -65,8 +66,7 @@ public class GeneratorsResourceReloadListener implements SimpleSynchronousResour
                 Generators.put(generator);
             } else {
                 for (var biomeIdentifier : configurationResource.getBiomes()) {
-                    var biome = BuiltinRegistries.BIOME.get(new Identifier(biomeIdentifier));
-                    Generators.put(biome, generator);
+                    Generators.put(new Identifier(biomeIdentifier), generator);
                 }
             }
         }

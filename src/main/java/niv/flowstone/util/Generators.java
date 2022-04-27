@@ -9,13 +9,13 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-import net.minecraft.world.biome.Biome;
+import net.minecraft.util.Identifier;
 
 public class Generators {
 
     private static final Set<Generator> COMMON_GENERATORS = new HashSet<>();
 
-    private static final Map<Biome, Set<Generator>> BIOME_SPECIFIC_GENERATORS = new HashMap<>();
+    private static final Map<Identifier, Set<Generator>> BIOME_SPECIFIC_GENERATORS = new HashMap<>();
 
     private Generators() {
     }
@@ -24,13 +24,13 @@ public class Generators {
         COMMON_GENERATORS.add(requireNonNull(generator));
     }
 
-    public static final synchronized void put(Biome biome, Generator generator) {
+    public static final synchronized void put(Identifier biome, Generator generator) {
         BIOME_SPECIFIC_GENERATORS
                 .computeIfAbsent(requireNonNull(biome), key -> new HashSet<>())
                 .add(requireNonNull(generator));
     }
 
-    public static final synchronized Set<Generator> get(Biome biome) {
+    public static final synchronized Set<Generator> get(Identifier biome) {
         return Sets.union(COMMON_GENERATORS, BIOME_SPECIFIC_GENERATORS.getOrDefault(biome, Set.of()));
     }
 

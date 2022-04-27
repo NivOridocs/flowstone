@@ -11,6 +11,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.LavaFluid;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.WorldAccess;
 import niv.flowstone.util.Generator;
 import niv.flowstone.util.Generators;
@@ -25,21 +26,22 @@ public class LavaFluidMixin {
 					target = "Lnet/minecraft/world/WorldAccess;" + "setBlockState("
 							+ "Lnet/minecraft/util/math/BlockPos;"
 							+ "Lnet/minecraft/block/BlockState;" + "I" + ")Z"))
-	public boolean setBlockStateProxy(WorldAccess world, BlockPos pos, BlockState state,
-			int flags) {
-		if (state.getBlock().equals(Blocks.STONE)) {
-			var states = new ArrayList<BlockState>();
-			int magmaCount = getMagmaCount(world, pos);
+	public boolean setBlockStateProxy(WorldAccess world, BlockPos pos, BlockState state, int flags) {
+        if (state.getBlock().equals(Blocks.STONE)) {
+            var states = new ArrayList<BlockState>();
+            int magmaCount = getMagmaCount(world, pos);
 
-			for (Generator gen : getGenerators(world, pos))
-				if (gen.isValidPos(world, pos))
-					gen.generateOre(world, magmaCount).ifPresent(states::add);
+            for (Generator gen : getGenerators(world, pos)) {
+                if (gen.isValidPos(world, pos)) {
+                    gen.generateOre(world, magmaCount).ifPresent(states::add);
+                }
+            }
 
-			states.add(state);
-			state = states.get(world.getRandom().nextInt(states.size()));
-		}
-		return world.setBlockState(pos, state, flags);
-	}
+            states.add(state);
+            state = states.get(world.getRandom().nextInt(states.size()));
+        }
+        return world.setBlockState(pos, state, flags);
+    }
 
     private int getMagmaCount(WorldAccess world, BlockPos pos) {
         int result = 0;
@@ -55,7 +57,8 @@ public class LavaFluidMixin {
     }
 
     private Set<Generator> getGenerators(WorldAccess world, BlockPos pos) {
-        return world.getBiome(pos).getKeyOrValue().right()
+        return world.getBiome(pos).getKey()
+                .map(RegistryKey::getValue)
                 .map(Generators::get).orElse(Set.of());
     }
 
