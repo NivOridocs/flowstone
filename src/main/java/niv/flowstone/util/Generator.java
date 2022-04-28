@@ -1,14 +1,23 @@
 package niv.flowstone.util;
 
 import static java.util.Objects.requireNonNull;
+import static niv.flowstone.FlowstoneMod.MOD_NAME;
+import static niv.flowstone.FlowstoneMod.log;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+
+import org.spongepowered.include.com.google.common.base.Objects;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.WorldAccess;
 
 public class Generator {
+    private static final Set<Generator> ALL = new HashSet<>();
+
     private static final int CHUNK = 16 * 16;
 
     private final int zero;
@@ -21,7 +30,7 @@ public class Generator {
     private final int volume;
     private final int density;
 
-    public Generator(BlockState state, int minY, int maxY, int density) {
+    private Generator(BlockState state, int minY, int maxY, int density) {
         this.state = state;
         this.zero = minY;
         this.high = maxY - minY;
@@ -34,7 +43,7 @@ public class Generator {
         this.density = density;
     }
 
-    public Generator(BlockState state, int minY, int maxY, int plateau, int density) {
+    private Generator(BlockState state, int minY, int maxY, int plateau, int density) {
         this.state = state;
         this.zero = minY;
         this.high = maxY - minY;
@@ -67,6 +76,39 @@ public class Generator {
             return Optional.of(state);
         else
             return Optional.empty();
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + bound;
+        result = prime * result + density;
+        result = prime * result + high;
+        result = prime * result + low;
+        result = prime * result + medium;
+        result = prime * result + ((state == null) ? 0 : state.hashCode());
+        result = prime * result + volume;
+        result = prime * result + zero;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object)
+            return true;
+
+        if (object != null && object instanceof Generator that)
+            return Objects.equal(this.state, that.state)
+                && this.bound == that.bound
+                && this.density == that.density
+                && this.high == that.high
+                && this.low == that.low
+                && this.state == that.state
+                && this.volume == that.volume
+                && this.zero == that.zero;
+
+        return false;
     }
 
     public static final Builder builder() {
@@ -115,17 +157,22 @@ public class Generator {
         }
 
         public Generator build() {
+            Generator generator;
+
             if (state == null || minY == null || maxY == null || count == null || size == null) {
                 return null;
             } else if (plateau == null) {
-                return new  Generator(state, minY, maxY, count * size);
+                generator = new Generator(state, minY, maxY, count * size);
             } else {
-                return new Generator(state, minY, maxY, plateau, count * size);
+                generator = new Generator(state, minY, maxY, plateau, count * size);
             }
-        }
 
-        public Optional<Generator> buildOptional() {
-            return Optional.ofNullable(build());
+            if (ALL.add(generator)) {
+                log.info("[{}] Build new {} generator", () -> MOD_NAME, () -> Registry.BLOCK.getId(state.getBlock()));
+                return generator;
+            } else {
+                return ALL.stream().filter(generator::equals).findAny().orElseThrow();
+            }
         }
 
     }
