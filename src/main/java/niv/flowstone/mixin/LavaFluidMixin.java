@@ -11,10 +11,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.LavaFluid;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.WorldAccess;
+import niv.flowstone.util.DynamicGenerators;
 import niv.flowstone.util.Generator;
-import niv.flowstone.util.Generators;
 
 @Mixin(LavaFluid.class)
 public class LavaFluidMixin {
@@ -57,9 +56,8 @@ public class LavaFluidMixin {
     }
 
     private Set<Generator> getGenerators(WorldAccess world, BlockPos pos) {
-        return world.getBiome(pos).getKey()
-                .map(RegistryKey::getValue)
-                .map(Generators::get).orElse(Set.of());
+        return world.getBiome(pos).getKeyOrValue().right()
+                .map(DynamicGenerators::get).orElse(Set.of());
     }
 
 }

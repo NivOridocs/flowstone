@@ -1,5 +1,7 @@
 package niv.flowstone.util;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Optional;
 
 import net.minecraft.block.BlockState;
@@ -65,6 +67,61 @@ public class Generator {
             return Optional.of(state);
         else
             return Optional.empty();
+    }
+
+    public static final Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private BlockState state;
+        private Integer minY;
+        private Integer maxY;
+        private Integer plateau;
+        private Integer size;
+        private Integer count;
+
+        private Builder() {
+        }
+
+        public Builder state(BlockState state) {
+            this.state = requireNonNull(state);
+            return this;
+        }
+
+        public Builder minY(int minY) {
+            this.minY = minY;
+            return this;
+        }
+
+        public Builder maxY(int maxY) {
+            this.maxY = maxY;
+            return this;
+        }
+
+        public Builder plateau(int plateau) {
+            this.plateau = plateau;
+            return this;
+        }
+
+        public Builder size(int size) {
+            this.size = size;
+            return this;
+        }
+
+        public Builder count(int count) {
+            this.count = count;
+            return this;
+        }
+
+        public Generator build() {
+            if (plateau == null) {
+                return new  Generator(state, minY, maxY, count * size);
+            } else {
+                return new Generator(state, minY, maxY, plateau, count * size);
+            }
+        }
+
     }
 
 }

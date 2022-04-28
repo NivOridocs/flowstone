@@ -3,7 +3,11 @@
   "package": "niv.flowstone.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "LavaFluidMixin"
+    "CountPlacementModifierAccessor",
+    "HeightRangePlacementModifierAccessor",
+    "LavaFluidMixin",
+    "TrapezoidHeightProviderAccessor",
+    "UniformHeightProviderAccessor"
   ],
   "client": [],
   "server": [],
