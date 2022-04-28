@@ -115,11 +115,17 @@ public class Generator {
         }
 
         public Generator build() {
-            if (plateau == null) {
+            if (state == null || minY == null || maxY == null || count == null || size == null) {
+                return null;
+            } else if (plateau == null) {
                 return new  Generator(state, minY, maxY, count * size);
             } else {
                 return new Generator(state, minY, maxY, plateau, count * size);
             }
+        }
+
+        public Optional<Generator> buildOptional() {
+            return Optional.ofNullable(build());
         }
 
     }
