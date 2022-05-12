@@ -2,19 +2,20 @@ package niv.flowstone.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
+
 import net.minecraft.world.gen.YOffset;
 import net.minecraft.world.gen.heightprovider.TrapezoidHeightProvider;
 
 @Mixin(TrapezoidHeightProvider.class)
-public interface TrapezoidHeightProviderHook {
+public interface TrapezoidHeightProviderAccessor {
 
-	@Accessor("minOffset")
-	public YOffset getMinOffset();
+    @Accessor("minOffset")
+    YOffset getMinOffset();
 
-	@Accessor("maxOffset")
-	public YOffset getMaxOffset();
+    @Accessor("maxOffset")
+    YOffset getMaxOffset();
 
-	@Accessor("plateau")
-	public int getPlateau();
+    @Accessor("plateau")
+    int getPlateau();
 
 }
