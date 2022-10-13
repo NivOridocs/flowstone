@@ -26,8 +26,8 @@
     "flowstone.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.11.3",
-    "minecraft": "1.18.x",
+    "fabricloader": ">=0.12.12",
+    "minecraft": "1.19.x",
     "java": ">=17"
   }
 }
