@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "flowstone",
+	"version": "${version}",
+	"name": "Flowstone",
+	"description": "Do you want recipes for when water and lava meet? 'Couse that what Flowstone is for!",
+	"authors": [
+		"Niv Oridocs"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/flowstone",
+		"sources": "https://github.com/NivOridocs/flowstone"
+	},
+	"license": "MIT",
+	"icon": "assets/flowstone/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"niv.flowstone.Flowstone"
+		]
+	},
+	"mixins": [
+		"flowstone.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.22",
+		"minecraft": "~1.20.1",
+		"java": ">=17"
+	}
+}
