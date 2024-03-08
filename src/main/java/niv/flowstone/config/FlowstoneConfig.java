@@ -10,10 +10,10 @@ import java.util.List;
 import com.google.gson.Gson;
 
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import niv.flowstone.Flowstone;
 
 public class FlowstoneConfig {
@@ -87,7 +87,7 @@ public class FlowstoneConfig {
 
     public static class RecipeOption {
 
-        private Identifier block;
+        private ResourceLocation block;
 
         private double chance;
 
@@ -95,16 +95,16 @@ public class FlowstoneConfig {
             /* empty constructor */
         }
 
-        public RecipeOption(Identifier block, double chance) {
+        public RecipeOption(ResourceLocation block, double chance) {
             this.block = block;
             this.chance = chance;
         }
 
-        public Identifier getBlock() {
+        public ResourceLocation getBlock() {
             return block;
         }
 
-        public void setBlock(Identifier block) {
+        public void setBlock(ResourceLocation block) {
             this.block = block;
         }
 
@@ -117,7 +117,7 @@ public class FlowstoneConfig {
         }
 
         private static RecipeOption of(Block block, double chance) {
-            return new RecipeOption(Registries.BLOCK.getId(block), chance);
+            return new RecipeOption(BuiltInRegistries.BLOCK.getKey(block), chance);
         }
     }
 }
