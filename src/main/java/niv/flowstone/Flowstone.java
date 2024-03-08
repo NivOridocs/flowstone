@@ -1,15 +1,15 @@
 package niv.flowstone;
 
-import net.fabricmc.api.ModInitializer;
-import net.minecraft.util.Identifier;
-import niv.flowstone.config.FlowstoneConfig;
-import niv.flowstone.config.IdentifierAdapter;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import net.fabricmc.api.ModInitializer;
+import net.minecraft.resources.ResourceLocation;
+import niv.flowstone.config.FlowstoneConfig;
+import niv.flowstone.config.ResourceLocationAdapter;
 
 public class Flowstone implements ModInitializer {
     // This logger is used to write text to the console and the log file.
@@ -32,7 +32,7 @@ public class Flowstone implements ModInitializer {
     private static Gson getGson() {
         if (gson == null) {
             gson = new GsonBuilder()
-                    .registerTypeAdapter(Identifier.class, new IdentifierAdapter())
+                    .registerTypeAdapter(ResourceLocation.class, new ResourceLocationAdapter())
                     .setPrettyPrinting()
                     .create();
         }
