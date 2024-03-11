@@ -90,9 +90,9 @@ public class FlowstoneRecipe implements Recipe<FlowstoneRecipe.Context> {
     }
 
     public static Optional<Block> findReplace(Block target, Level level) {
-        var blocks = level.getRecipeManager().getRecipeFor(Flowstone.FLOWSTONE, new Context(target), level).stream()
-                .flatMap(recipe -> recipe.compute(level.getRandom()))
-                .toList();
+        var blocks = level.getRecipeManager()
+                .getRecipesFor(Flowstone.FLOWSTONE, new Context(target), level).stream()
+                .flatMap(recipe -> recipe.compute(level.getRandom())).toList();
         return blocks.isEmpty() ? Optional.empty() : Optional.of(blocks.get(level.getRandom().nextInt(blocks.size())));
     }
 
