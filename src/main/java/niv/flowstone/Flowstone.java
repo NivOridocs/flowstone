@@ -3,17 +3,12 @@ package niv.flowstone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import niv.flowstone.config.FlowstoneConfig;
-import niv.flowstone.config.ResourceLocationAdapter;
 import niv.flowstone.recipe.FlowstoneRecipe;
 
 public class Flowstone implements ModInitializer {
@@ -23,9 +18,10 @@ public class Flowstone implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Flowstone");
 
     public static final String MOD_ID;
-    private static final ResourceLocation ID;
     public static final RecipeType<FlowstoneRecipe> FLOWSTONE;
     public static final RecipeSerializer<FlowstoneRecipe> FLOWSTONE_SERIALIZER;
+
+    private static final ResourceLocation ID;
 
     static {
         MOD_ID = "flowstone";
@@ -41,25 +37,11 @@ public class Flowstone implements ModInitializer {
         Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, ID, FLOWSTONE_SERIALIZER);
     }
 
-    private static Gson gson;
-
     @Override
     public void onInitialize() {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
         // However, some things (like resources) may still be uninitialized.
         // Proceed with mild caution.
         LOGGER.info("Initialize");
-
-        FlowstoneConfig.load(getGson());
-    }
-
-    private static Gson getGson() {
-        if (gson == null) {
-            gson = new GsonBuilder()
-                    .registerTypeAdapter(ResourceLocation.class, new ResourceLocationAdapter())
-                    .setPrettyPrinting()
-                    .create();
-        }
-        return gson;
     }
 }
