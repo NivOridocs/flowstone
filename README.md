@@ -2,15 +2,37 @@
 
 Flowstone is a mod that makes ores renewable resources.
 
-In vanilla Minecraft, lava flowing over water always generates a stone block. With Flowstone, there is a configurable chance that it will generate an ore block.
+In vanilla Minecraft, lava flowing over water always generates a stone block. With Flowstone, there is a chance that it will generate a random ore block instead.
 
-By default, all eight ore blocks of any vanilla overworld (coal, copper, iron, gold, lapis, redstone, emerald, and diamond) can be generated with a 1% chance each.
+By default, all eight vanilla overworld ore blocks (coal, copper, iron, gold, lapis, redstone, emerald, and diamond) can be generated with a 1% chance each.
 
 ![Flowstone Showcase](img/Flowstone_Showcase_1.gif)
 
 (In the GIF, each ore block has a 100% chance for example purposes.)
 
-## Configuration
+## Recipes
+
+As per Flowstone 5.1 onwards, there is no longer a configuration file for configuring which blocks to generate and with what chances.
+
+Instead, I created the custom recipe type `flowstone:flowstone` and eight recipes of that type, one per vanilla overworld ore block.
+
+<details>
+<summary>Example Coal Ore Recipe</summary>
+
+```json
+{
+    "type": "flowstone:flowstone", // The recipe type
+    "replace": "minecraft:stone", // The block to be replaced
+    "with": "minecraft:coal_ore", // The block to replace the above one with
+    "chance": 0.01 // The replacement chance
+}
+```
+
+</details>
+
+This way, you can add recipes for new ore blocks through datapacks.
+
+## Configuration (Deprecated)
 
 If one isn't present, Flowstone creates a default `flowstone.json` configuration file inside the `config` folder, which is under the Minecraft folder. The file looks like the following snippet.
 
