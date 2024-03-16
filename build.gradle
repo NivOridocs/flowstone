@@ -82,6 +82,7 @@ publishing {
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
     projectId = "${project.project_id}"
+    gameVersions = ["1.20.1"]
     uploadFile = remapJar
     syncBodyFrom = rootProject.file("README.md").text
 }
