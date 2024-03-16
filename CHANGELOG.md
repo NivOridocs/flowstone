@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
++ Changed minimum target version to Minecraft 1.20.2 and tested compatibility up to Minecraft 1.20.4.
+
 ## [5.1] - 2024-03-16
 
 ### Added
