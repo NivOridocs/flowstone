@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [6.0] - 2024-03-16
+
+### Changed
+
++ Changed minimum target version to Minecraft 1.20.2 and tested compatibility up to Minecraft 1.20.4.
+
 ## [5.1] - 2024-03-16
 
 ### Added
@@ -14,3 +20,4 @@
 + Drop mod's patch version because unnecessary.
 
 [5.1]: https://github.com/NivOridocs/flowstone/releases/tag/5.1
+[6.0]: https://github.com/NivOridocs/flowstone/releases/tag/6.0

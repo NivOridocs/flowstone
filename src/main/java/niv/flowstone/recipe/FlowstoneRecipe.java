@@ -5,16 +5,16 @@ import static java.util.Objects.requireNonNull;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
@@ -30,16 +30,13 @@ public class FlowstoneRecipe implements Recipe<FlowstoneRecipe.Context> {
     static record Context(Block block) implements NullContainer {
     }
 
-    private final ResourceLocation id;
-
     private final Block replace;
 
     private final Block with;
 
     private final double chance;
 
-    public FlowstoneRecipe(ResourceLocation id, Block replace, Block with, double chance) {
-        this.id = requireNonNull(id);
+    public FlowstoneRecipe(Block replace, Block with, double chance) {
         this.replace = requireNonNull(replace);
         this.with = requireNonNull(with);
         this.chance = chance;
@@ -66,11 +63,6 @@ public class FlowstoneRecipe implements Recipe<FlowstoneRecipe.Context> {
     }
 
     @Override
-    public ResourceLocation getId() {
-        return id;
-    }
-
-    @Override
     public ItemStack getToastSymbol() {
         return replace.asItem().getDefaultInstance();
     }
@@ -92,30 +84,29 @@ public class FlowstoneRecipe implements Recipe<FlowstoneRecipe.Context> {
     public static Optional<Block> findReplace(Block target, Level level) {
         var blocks = level.getRecipeManager()
                 .getRecipesFor(Flowstone.FLOWSTONE, new Context(target), level).stream()
-                .flatMap(recipe -> recipe.compute(level.getRandom())).toList();
+                .map(RecipeHolder::value).flatMap(recipe -> recipe.compute(level.getRandom())).toList();
         return blocks.isEmpty() ? Optional.empty() : Optional.of(blocks.get(level.getRandom().nextInt(blocks.size())));
     }
 
     public static final class Serializer implements RecipeSerializer<FlowstoneRecipe> {
 
-        @Override
-        public FlowstoneRecipe fromJson(ResourceLocation id, JsonObject root) {
-            return new FlowstoneRecipe(id,
-                    getAsBlock(root, REPLACE),
-                    getAsBlock(root, WITH),
-                    GsonHelper.getAsDouble(root, CHANCE, 0d));
-        }
-
-        private Block getAsBlock(JsonObject root, String property) {
-            return BuiltInRegistries.BLOCK.get(new ResourceLocation(GsonHelper.getAsString(root, property)));
-        }
+        static final Codec<FlowstoneRecipe> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                BuiltInRegistries.BLOCK.byNameCodec().fieldOf(REPLACE).forGetter(r -> r.replace),
+                BuiltInRegistries.BLOCK.byNameCodec().fieldOf(WITH).forGetter(r -> r.with),
+                Codec.doubleRange(0d, 1d).fieldOf(CHANCE).forGetter(r -> r.chance))
+                .apply(instance, FlowstoneRecipe::new));
 
         @Override
-        public FlowstoneRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buf) {
+        public Codec<FlowstoneRecipe> codec() {
+            return CODEC;
+        }
+
+        @Override
+        public FlowstoneRecipe fromNetwork(FriendlyByteBuf buf) {
             var replace = BuiltInRegistries.BLOCK.get(buf.readResourceLocation());
             var with = BuiltInRegistries.BLOCK.get(buf.readResourceLocation());
             var chance = buf.readDouble();
-            return new FlowstoneRecipe(id, replace, with, chance);
+            return new FlowstoneRecipe(replace, with, chance);
         }
 
         @Override
