@@ -1,5 +1,4 @@
 {
-    "type": "flowstone:flowstone",
     "replace": "minecraft:stone",
     "with": "minecraft:coal_ore",
     "chance": 0.01
