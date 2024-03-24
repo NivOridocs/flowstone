@@ -14,14 +14,13 @@ By default, all eight vanilla overworld ore blocks (coal, copper, iron, gold, la
 
 As per Flowstone 5.1 onwards, there is no longer a configuration file for configuring which blocks to generate and with what chances.
 
-Instead, I created the custom recipe type `flowstone:flowstone` and eight recipes of that type, one per vanilla overworld ore block.
+Instead, Flowstone loads such configurations from `/data/<mod id or datapack name>/flowstone/generators`, where each file represents a block that Flowstone may use to replace that Minecraft would normally generate.
 
 <details>
-<summary>Example Coal Ore Recipe</summary>
+<summary>Example: stone_to_coal_ore.json</summary>
 
 ```json
 {
-    "type": "flowstone:flowstone", // The recipe type
     "replace": "minecraft:stone", // The block to be replaced
     "with": "minecraft:coal_ore", // The block to replace the above one with
     "chance": 0.01 // The replacement chance
@@ -30,58 +29,7 @@ Instead, I created the custom recipe type `flowstone:flowstone` and eight recipe
 
 </details>
 
-This way, you can add recipes for new ore blocks through datapacks.
-
-## Configuration (Deprecated)
-
-If one isn't present, Flowstone creates a default `flowstone.json` configuration file inside the `config` folder, which is under the Minecraft folder. The file looks like the following snippet.
-
-<details>
-<summary>Default Configuration File</summary>
-
-```json
-{
-  "enabled": true,
-  "recipes": [
-    {
-      "block": "minecraft:coal_ore",
-      "chance": 0.01
-    },
-    {
-      "block": "minecraft:copper_ore",
-      "chance": 0.01
-    },
-    {
-      "block": "minecraft:iron_ore",
-      "chance": 0.01
-    },
-    {
-      "block": "minecraft:gold_ore",
-      "chance": 0.01
-    },
-    {
-      "block": "minecraft:lapis_ore",
-      "chance": 0.01
-    },
-    {
-      "block": "minecraft:redstone_ore",
-      "chance": 0.01
-    },
-    {
-      "block": "minecraft:emerald_ore",
-      "chance": 0.01
-    },
-    {
-      "block": "minecraft:diamond_ore",
-      "chance": 0.01
-    }
-  ]
-}
-```
-
-</details>
-
-You can add new blocks and relative chances to the recipes list, maybe more ore blocks from other mods, or perhaps you want to generate andesite, diorite, and granite, too.
+This way, you can easily extend Flowstone to, for instance, account for modded ores through datapacks.
 
 ## Planned Features
 
