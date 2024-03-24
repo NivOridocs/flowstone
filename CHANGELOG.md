@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
++ Replace custom recipes with a dedicated registry to make Flowstone server-side-only again.
+
 ## [6.0] - 2024-03-16
 
 ### Changed
