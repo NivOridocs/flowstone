@@ -2,18 +2,21 @@ package niv.flowstone;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class FlowstoneGenerator {
+public class FlowstoneGenerator implements Predicate<Block> {
 
     public static final Codec<FlowstoneGenerator> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             BuiltInRegistries.BLOCK.byNameCodec().fieldOf("replace").forGetter(r -> r.replace),
@@ -33,7 +36,8 @@ public class FlowstoneGenerator {
         this.chance = chance;
     }
 
-    public boolean matches(Block block) {
+    @Override
+    public boolean test(Block block) {
         return replace.equals(block);
     }
 
@@ -41,13 +45,16 @@ public class FlowstoneGenerator {
         return random.nextDouble() <= this.chance ? Stream.of(with) : Stream.empty();
     }
 
-    public static Optional<Block> findReplace(Block target, Level level) {
-        var blocks = level.registryAccess().registryOrThrow(Flowstone.GENERATOR).stream()
-                .filter(generator -> generator.matches(target))
-                .flatMap(generator -> generator.compute(level.getRandom()))
-                .toList();
-        return blocks.isEmpty()
-                ? Optional.empty()
-                : Optional.of(blocks.get(level.getRandom().nextInt(blocks.size())));
+    public static BlockState replace(LevelAccessor accessor, BlockState state) {
+        if (accessor instanceof Level level) {
+            var blocks = level.registryAccess().registry(Flowstone.GENERATOR)
+                    .map(Registry::stream).orElseGet(Stream::empty)
+                    .filter(gen -> gen.test(state.getBlock()))
+                    .flatMap(gen -> gen.compute(level.getRandom()))
+                    .toList();
+            return blocks.isEmpty() ? state
+                    : blocks.get(level.getRandom().nextInt(blocks.size())).defaultBlockState();
+        }
+        return state;
     }
 }

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
++ Add replacement logic for cobblestone, obsidian, and basalt generation.
+
 ## [6.1] - 2024-03-24
 
 ### Changed
