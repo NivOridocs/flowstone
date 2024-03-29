@@ -10,11 +10,11 @@ By default, all eight vanilla overworld ore blocks (coal, copper, iron, gold, la
 
 (In the GIF, each ore block has a 100% chance for example purposes.)
 
-## Recipes
+## Generators
 
-As per Flowstone 5.1 onwards, there is no longer a configuration file for configuring which blocks to generate and with what chances.
+Flowstone uses a custom `flowstone:generators` dynamic registry to determine whether and how to replace an about-to-be-generated block.
 
-Instead, Flowstone loads such configurations from `/data/<mod id or datapack name>/flowstone/generators`, where each file represents a block that Flowstone may use to replace that Minecraft would normally generate.
+Said registry reads files from `/data/<mod id or datapack name>/flowstone/generators`, files like the following example.
 
 <details>
 <summary>Example: stone_to_coal_ore.json</summary>
@@ -29,8 +29,4 @@ Instead, Flowstone loads such configurations from `/data/<mod id or datapack nam
 
 </details>
 
-This way, you can easily extend Flowstone to, for instance, account for modded ores through datapacks.
-
-## Planned Features
-
-I also want to mod cobblestone and basalt generators, but I can't figure out how. If one of you fellow modders have some clue, let me know.
+This way, through datapacks, one can easily extend Flowstone to, for instance, account for modded ores.
