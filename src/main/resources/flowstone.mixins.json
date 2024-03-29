@@ -3,7 +3,8 @@
 	"package": "niv.flowstone.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"LavaFluidMixin"
+		"LavaFluidMixin",
+        "LiquidBlockMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
