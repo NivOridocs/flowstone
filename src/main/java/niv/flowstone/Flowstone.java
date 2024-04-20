@@ -43,6 +43,7 @@ public class Flowstone implements ModInitializer {
         LOGGER.info("Initialize");
 
         registerDefaultDatapack("overworld_ores", "Overworld Ores 1%");
+        registerDatapack("crying_obsidian", "Crying Obsidian 25%");
     }
 
     private static final void registerDefaultDatapack(String path, String name) {
@@ -51,5 +52,13 @@ public class Flowstone implements ModInitializer {
                 MOD_CONTAINER,
                 Component.literal(name),
                 ResourcePackActivationType.DEFAULT_ENABLED);
+    }
+
+    private static final void registerDatapack(String path, String name) {
+        ResourceManagerHelper.registerBuiltinResourcePack(
+                new ResourceLocation(MOD_ID, path),
+                MOD_CONTAINER,
+                Component.literal(name),
+                ResourcePackActivationType.NORMAL);
     }
 }

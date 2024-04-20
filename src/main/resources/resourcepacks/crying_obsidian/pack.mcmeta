@@ -1,0 +1,7 @@
+{
+    "pack": {
+        "pack_format": 18,
+        "supported_formats": [18, 26],
+        "description": "Generate crying_obsidian instead of obsidian with 25% chance"
+    }
+}
