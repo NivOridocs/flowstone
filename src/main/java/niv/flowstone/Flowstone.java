@@ -44,6 +44,7 @@ public class Flowstone implements ModInitializer {
 
         registerDefaultDatapack("overworld_ores", "Overworld Ores 1%");
         registerDatapack("crying_obsidian", "Crying Obsidian 25%");
+        registerDatapack("nether_ores", "Netherrack and Nether Ores");
     }
 
     private static final void registerDefaultDatapack(String path, String name) {
