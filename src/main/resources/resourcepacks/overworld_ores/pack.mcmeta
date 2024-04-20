@@ -1,0 +1,7 @@
+{
+    "pack": {
+        "pack_format": 18,
+        "supported_formats": [18, 26],
+        "description": "Generate overworld ores instead of stone with 1% chance each"
+    }
+}
