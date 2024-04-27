@@ -1,0 +1,7 @@
+{
+    "pack": {
+        "pack_format": 18,
+        "supported_formats": [18, 26],
+        "description": "Generate netherrack and nether ores instead of basalt"
+    }
+}

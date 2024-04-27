@@ -47,10 +47,10 @@ public class FlowstoneGenerator implements Predicate<Block> {
 
     public static BlockState replace(LevelAccessor accessor, BlockState state) {
         if (accessor instanceof Level level) {
-            var blocks = level.registryAccess().registry(Flowstone.GENERATOR)
-                    .map(Registry::stream).orElseGet(Stream::empty)
-                    .filter(gen -> gen.test(state.getBlock()))
-                    .flatMap(gen -> gen.compute(level.getRandom()))
+            var blocks = level.registryAccess().registry(Flowstone.GENERATOR).stream()
+                    .flatMap(Registry::stream)
+                    .filter(g -> g.test(state.getBlock()))
+                    .flatMap(g -> g.compute(level.getRandom()))
                     .toList();
             return blocks.isEmpty() ? state
                     : blocks.get(level.getRandom().nextInt(blocks.size())).defaultBlockState();

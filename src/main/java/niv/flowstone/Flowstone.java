@@ -5,7 +5,12 @@ import org.slf4j.LoggerFactory;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 
@@ -32,5 +37,21 @@ public class Flowstone implements ModInitializer {
         // However, some things (like resources) may still be uninitialized.
         // Proceed with mild caution.
         LOGGER.info("Initialize");
+
+        var container = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
+
+        registerDatapack(container, "overworld_ores", "Overworld Ores", true);
+        registerDatapack(container, "crying_obsidian", "Crying Obsidian", false);
+        registerDatapack(container, "nether_ores", "Netherrack and Nether Ores", false);
+    }
+
+    private final void registerDatapack(ModContainer container, String path, String name, boolean enabled) {
+        ResourceManagerHelper.registerBuiltinResourcePack(
+                new ResourceLocation(MOD_ID, path),
+                container,
+                Component.literal(name),
+                enabled
+                        ? ResourcePackActivationType.DEFAULT_ENABLED
+                        : ResourcePackActivationType.NORMAL);
     }
 }
