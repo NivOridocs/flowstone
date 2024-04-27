@@ -22,14 +22,10 @@ public class Flowstone implements ModInitializer {
 
     public static final String MOD_ID;
 
-    public static final ModContainer MOD_CONTAINER;
-
     public static final ResourceKey<Registry<FlowstoneGenerator>> GENERATOR;
 
     static {
         MOD_ID = "flowstone";
-
-        MOD_CONTAINER = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
 
         GENERATOR = ResourceKey.<FlowstoneGenerator>createRegistryKey(new ResourceLocation(MOD_ID, "generators"));
         DynamicRegistries.register(GENERATOR, FlowstoneGenerator.CODEC);
@@ -42,24 +38,20 @@ public class Flowstone implements ModInitializer {
         // Proceed with mild caution.
         LOGGER.info("Initialize");
 
-        registerDefaultDatapack("overworld_ores", "Overworld Ores 1%");
-        registerDatapack("crying_obsidian", "Crying Obsidian 25%");
-        registerDatapack("nether_ores", "Netherrack and Nether Ores");
+        var container = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
+
+        registerDatapack(container, "overworld_ores", "Overworld Ores", true);
+        registerDatapack(container, "crying_obsidian", "Crying Obsidian", false);
+        registerDatapack(container, "nether_ores", "Netherrack and Nether Ores", false);
     }
 
-    private static final void registerDefaultDatapack(String path, String name) {
+    private final void registerDatapack(ModContainer container, String path, String name, boolean enabled) {
         ResourceManagerHelper.registerBuiltinResourcePack(
                 new ResourceLocation(MOD_ID, path),
-                MOD_CONTAINER,
+                container,
                 Component.literal(name),
-                ResourcePackActivationType.DEFAULT_ENABLED);
-    }
-
-    private static final void registerDatapack(String path, String name) {
-        ResourceManagerHelper.registerBuiltinResourcePack(
-                new ResourceLocation(MOD_ID, path),
-                MOD_CONTAINER,
-                Component.literal(name),
-                ResourcePackActivationType.NORMAL);
+                enabled
+                        ? ResourcePackActivationType.DEFAULT_ENABLED
+                        : ResourcePackActivationType.NORMAL);
     }
 }
