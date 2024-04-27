@@ -5,6 +5,13 @@
 ### Added
 
 + Add replacement logic for cobblestone, obsidian, and basalt generation.
++ Add built-in datapack for crying obsidian generation (disabled by default).
++ Add built-in datapack for netherrack and nether ores generation (disabled by default).
++ Add Minecraft 1.20.5 compatibility.
+
+### Changed
+
++ Move embedded datapack to a built-in datapack (enabled by default).
 
 ## [6.1] - 2024-03-24
 

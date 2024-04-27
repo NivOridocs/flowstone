@@ -30,3 +30,15 @@ Said registry reads files from `/data/<mod id or datapack name>/flowstone/genera
 </details>
 
 This way, through datapacks, one can easily extend Flowstone to, for instance, account for modded ores.
+
+## Datapacks
+
+Flowstone offers three built-in datapacks to enable/disable to add or remove generation options.
+
++ **Overworld Ores** (enabled by default) adds a 1%-per-ore chance for lava flowing over water to generate an overworld ore instead of stone.
+
++ **Crying Obsidian** (disabled by default) adds a 25% chance for water flowing over a lava source to generate crying obsidian instead of obsidian.
+
++ **Netherrack and Nether Ores** (enabled by default) adds a chance for lava flowing over soul soil (and near blue ice) to generate, instead of basalt, netherrack with a 100% chance, nether gold and quartz ore with 10% each, and ancient debris with a 1% chance.
+
+Plus, these datapacks offer good examples on how to create more.
