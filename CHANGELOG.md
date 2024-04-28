@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [6.2] - 2024-04-27
+
+### Added
+
++ Add replacement logic for cobblestone, obsidian, and basalt generation.
++ Add built-in datapack for crying obsidian generation (disabled by default).
++ Add built-in datapack for netherrack and nether ores generation (disabled by default).
++ Add Minecraft 1.20.5 compatibility.
+
+### Changed
+
++ Move embedded datapack to a built-in datapack (enabled by default).
+
 ## [6.1] - 2024-03-24
 
 ### Changed
@@ -25,6 +38,7 @@
 + Replace configuration file with custom recipes.
 + Drop mod's patch version because unnecessary.
 
+[6.2]: https://github.com/NivOridocs/flowstone/releases/tag/6.2
 [6.1]: https://github.com/NivOridocs/flowstone/releases/tag/6.1
 [6.0]: https://github.com/NivOridocs/flowstone/releases/tag/6.0
 [5.1]: https://github.com/NivOridocs/flowstone/releases/tag/5.1

@@ -10,11 +10,11 @@ By default, all eight vanilla overworld ore blocks (coal, copper, iron, gold, la
 
 (In the GIF, each ore block has a 100% chance for example purposes.)
 
-## Recipes
+## Generators
 
-As per Flowstone 5.1 onwards, there is no longer a configuration file for configuring which blocks to generate and with what chances.
+Flowstone uses a custom `flowstone:generators` dynamic registry to determine whether and how to replace an about-to-be-generated block.
 
-Instead, Flowstone loads such configurations from `/data/<mod id or datapack name>/flowstone/generators`, where each file represents a block that Flowstone may use to replace that Minecraft would normally generate.
+Said registry reads files from `/data/<mod id or datapack name>/flowstone/generators`, files like the following example.
 
 <details>
 <summary>Example: stone_to_coal_ore.json</summary>
@@ -29,8 +29,16 @@ Instead, Flowstone loads such configurations from `/data/<mod id or datapack nam
 
 </details>
 
-This way, you can easily extend Flowstone to, for instance, account for modded ores through datapacks.
+This way, through datapacks, one can easily extend Flowstone to, for instance, account for modded ores.
 
-## Planned Features
+## Datapacks
 
-I also want to mod cobblestone and basalt generators, but I can't figure out how. If one of you fellow modders have some clue, let me know.
+Flowstone offers three built-in datapacks to enable/disable to add or remove generation options.
+
++ **Overworld Ores** (enabled by default) adds a 1%-per-ore chance for lava flowing over water to generate an overworld ore instead of stone.
+
++ **Crying Obsidian** (disabled by default) adds a 25% chance for water flowing over a lava source to generate crying obsidian instead of obsidian.
+
++ **Netherrack and Nether Ores** (enabled by default) adds a chance for lava flowing over soul soil (and near blue ice) to generate, instead of basalt, netherrack with a 100% chance, nether gold and quartz ore with 10% each, and ancient debris with a 1% chance.
+
+Plus, these datapacks offer good examples on how to create more.

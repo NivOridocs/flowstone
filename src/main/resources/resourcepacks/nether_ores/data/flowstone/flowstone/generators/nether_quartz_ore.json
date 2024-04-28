@@ -1,0 +1,5 @@
+{
+    "replace": "minecraft:basalt",
+    "with": "minecraft:nether_quartz_ore",
+    "chance": 0.1
+}
