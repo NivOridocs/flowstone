@@ -2,6 +2,7 @@ package niv.flowstone.impl;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
+import static niv.flowstone.config.Configuration.debugMode;
 
 import java.util.Optional;
 import java.util.Set;
@@ -16,6 +17,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -53,7 +55,11 @@ public class CustomGenerator implements Predicate<BlockState>, Generator {
 
     @Override
     public Optional<BlockState> apply(LevelAccessor level, BlockPos pos) {
-        return level.getRandom().nextDouble() <= this.chance ? Optional.of(with.defaultBlockState()) : Optional.empty();
+        return Optional.of(this.with.defaultBlockState()).filter(value -> test(level.getRandom()));
+    }
+
+    private boolean test(RandomSource random) {
+        return debugMode() ||  random.nextDouble() <= this.chance;
     }
 
     private static final Optional<BlockState> applyAll(LevelAccessor level, BlockPos pos, BlockState state) {

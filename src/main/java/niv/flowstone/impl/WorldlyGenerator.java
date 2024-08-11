@@ -36,6 +36,8 @@ import niv.flowstone.Replacers;
 import niv.flowstone.api.Generator;
 import niv.flowstone.api.Replacer;
 
+import static niv.flowstone.config.Configuration.debugMode;
+
 public class WorldlyGenerator implements Generator {
 
     private static final Table<Block, Biome, Set<Generator>> biomeCache = HashBasedTable.create();
@@ -67,7 +69,7 @@ public class WorldlyGenerator implements Generator {
     }
 
     private boolean test(RandomSource random, int y) {
-        return random.nextInt(this.maxBlockCount) < (this.blockCount * this.function.applyAsDouble(y));
+        return debugMode() || random.nextInt(this.maxBlockCount) < (this.blockCount * this.function.applyAsDouble(y));
     }
 
     @Override

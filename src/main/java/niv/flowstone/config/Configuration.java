@@ -10,7 +10,13 @@ public final class Configuration {
     private boolean allowWorldlyGenerators = true;
     private boolean allowCustomGenerators = false;
 
+    private Boolean debugMode = null;
+
     private Configuration() {
+    }
+
+    private boolean getDebugMode() {
+        return this.debugMode != null && this.debugMode;
     }
 
     public static final boolean allowDeepslateGenerators() {
@@ -23,5 +29,9 @@ public final class Configuration {
 
     public static final boolean allowCustomGenerators() {
         return INSTANCE.get().allowCustomGenerators;
+    }
+
+    public static final boolean debugMode() {
+        return INSTANCE.get().getDebugMode();
     }
 }
