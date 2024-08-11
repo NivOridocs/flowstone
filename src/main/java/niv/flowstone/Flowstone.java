@@ -1,13 +1,7 @@
 package niv.flowstone;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Suppliers;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
@@ -21,7 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import niv.flowstone.api.Replacer;
+import niv.flowstone.config.Configuration;
 import niv.flowstone.impl.CustomGenerator;
 import niv.flowstone.impl.DeepslateGenerator;
 import niv.flowstone.impl.WorldlyGenerator;
@@ -33,11 +27,6 @@ public class Flowstone implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Flowstone");
 
     public static final String MOD_ID = "flowstone";
-
-    private static final List<Replacer> replacers = new ArrayList<>();
-
-    private static final Supplier<? extends Replacer> replacer = Suppliers
-            .memoize(() -> Replacers.defaultedMultiReplacer(replacers));
 
     @Override
     public void onInitialize() {
@@ -51,9 +40,10 @@ public class Flowstone implements ModInitializer {
         ServerWorldEvents.LOAD.register(DeepslateGenerator.getCacheInvalidator());
         ServerWorldEvents.LOAD.register(WorldlyGenerator.getCacheInvalidator());
 
-        replacers.add(DeepslateGenerator.getReplacer());
-        replacers.add(WorldlyGenerator.getReplacer());
-        replacers.add(CustomGenerator.getReplacer());
+        Configuration.LOADED.register(() -> LOGGER.info("Load configuration"));
+        Configuration.LOADED.register(Replacers.getInvalidator());
+
+        Configuration.init();
 
         var container = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
 
@@ -73,6 +63,6 @@ public class Flowstone implements ModInitializer {
     }
 
     public static final BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
-        return replacer.get().apply(level, pos, state).orElse(state);
+        return Replacers.configuredReplacer().apply(level, pos, state).orElse(state);
     }
 }
