@@ -25,6 +25,6 @@ public class LavaFluidMixin {
             at = @At(value = "INVOKE", //
                     target = LEVEL_ACCESSOR + "setBlock(" + BLOCK_POS + BLOCK_STATE + "I" + ")Z"))
     public boolean setBlockStateProxy(LevelAccessor level, BlockPos pos, BlockState state, int flags) {
-        return level.setBlock(pos, replace(level, state), flags);
+        return level.setBlock(pos, replace(level, pos, state), flags);
     }
 }
