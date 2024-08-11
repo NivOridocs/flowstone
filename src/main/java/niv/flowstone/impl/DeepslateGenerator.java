@@ -1,0 +1,117 @@
+package niv.flowstone.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents.Load;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.SurfaceRules.BlockRuleSource;
+import net.minecraft.world.level.levelgen.SurfaceRules.SequenceRuleSource;
+import net.minecraft.world.level.levelgen.SurfaceRules.TestRuleSource;
+import net.minecraft.world.level.levelgen.SurfaceRules.VerticalGradientConditionSource;
+import net.minecraft.world.level.levelgen.WorldGenerationContext;
+import niv.flowstone.Replacers;
+import niv.flowstone.api.Generator;
+import niv.flowstone.api.Replacer;
+
+public class DeepslateGenerator implements Generator {
+
+    private static final Map<ServerLevel, Map<Block, Generator>> cache = new HashMap<>(3);
+
+    private final BlockState state;
+
+    private final int maxY;
+
+    private final int minY;
+
+    private DeepslateGenerator(BlockState state, int maxY, int minY) {
+        this.state = state;
+        this.maxY = maxY;
+        this.minY = minY;
+    }
+
+    @Override
+    public Optional<BlockState> apply(LevelAccessor level, BlockPos pos) {
+        return Optional.of(state).filter(value -> test(level.getRandom(), pos.getY()));
+    }
+
+    private boolean test(RandomSource random, int y) {
+        return y <= minY || y < maxY && random.nextDouble() < Mth.map(y, minY, maxY, 1d, 0d);
+    }
+
+    private static final Optional<BlockState> applyAny(LevelAccessor level, BlockPos pos, BlockState state) {
+        var result = cache.get(level);
+        if (result == null) {
+            result = Map.of();
+            if (level instanceof ServerLevel serverLevel) {
+                result = loadGenerators(serverLevel);
+                cache.put(serverLevel, result);
+            }
+        }
+        return Optional.ofNullable(result.get(state.getBlock())).flatMap(value -> value.apply(level, pos));
+    }
+
+    private static Map<Block, Generator> loadGenerators(ServerLevel level) {
+        var gradient = Optional.of(level)
+                .map(ServerLevel::getChunkSource)
+                .map(ServerChunkCache::getGenerator)
+                .filter(NoiseBasedChunkGenerator.class::isInstance)
+                .map(NoiseBasedChunkGenerator.class::cast)
+                .map(NoiseBasedChunkGenerator::generatorSettings)
+                .map(Holder::value)
+                .map(NoiseGeneratorSettings::surfaceRule)
+                .filter(SequenceRuleSource.class::isInstance)
+                .map(SequenceRuleSource.class::cast)
+                .map(SequenceRuleSource::sequence)
+                .stream().flatMap(List::stream)
+                .filter(TestRuleSource.class::isInstance)
+                .map(TestRuleSource.class::cast)
+                .filter(DeepslateGenerator::byThenRunResultState).findFirst()
+                .map(TestRuleSource::ifTrue)
+                .filter(VerticalGradientConditionSource.class::isInstance)
+                .map(VerticalGradientConditionSource.class::cast);
+        var result = new HashMap<Block, Generator>(2);
+        if (gradient.isPresent()) {
+            var context = new WorldGenerationContext(level.getChunkSource().getGenerator(), level);
+            var maxY = gradient.get().falseAtAndAbove().resolveY(context);
+            var minY = gradient.get().trueAtAndBelow().resolveY(context);
+            result.put(Blocks.STONE,  new DeepslateGenerator(Blocks.DEEPSLATE.defaultBlockState(), maxY, minY));
+            result.put(Blocks.COBBLESTONE, new DeepslateGenerator(Blocks.COBBLED_DEEPSLATE.defaultBlockState(), maxY, minY));
+        }
+        return result;
+    }
+
+    private static boolean byThenRunResultState(TestRuleSource condition) {
+        return Optional.of(condition)
+                .map(TestRuleSource::thenRun)
+                .filter(BlockRuleSource.class::isInstance)
+                .map(BlockRuleSource.class::cast)
+                .map(BlockRuleSource::resultState)
+                .filter(value -> value.is(Blocks.DEEPSLATE))
+                .isPresent();
+    }
+
+    public static final Load getCacheInvalidator() {
+        return (server, level) -> DeepslateGenerator.cache.clear();
+    }
+
+    public static final Replacer getReplacer() {
+        return Replacers.defaultedMultiReplacer(
+            Replacers.allowedBlocksEmptyingReplacer(Blocks.STONE, Blocks.COBBLESTONE),
+            DeepslateGenerator::applyAny
+        );
+    }
+}
