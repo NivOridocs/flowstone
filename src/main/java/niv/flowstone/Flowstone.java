@@ -1,9 +1,7 @@
 package niv.flowstone;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +19,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import niv.flowstone.api.Generator;
 
 public class Flowstone implements ModInitializer {
     // This logger is used to write text to the console and the log file.
@@ -68,19 +66,13 @@ public class Flowstone implements ModInitializer {
     }
 
     public static final BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
-        var generators = new HashSet<>(FlowstoneGenerator.getFlowstoneGenerators(level, state));
-        if (state.is(Blocks.STONE)) {
-            generators.addAll(SimpleGenerator.getSimpleStoneGenerators(level, pos));
-        }
-        if (state.is(Blocks.NETHERRACK)) {
-            generators.addAll(SimpleGenerator.getSimpleNetherrackGenerators(level, pos));
-        }
-        return replace(level, pos, generators).orElse(state);
+        return replace(level, pos, Stream.concat(
+                SimpleGenerator.getSimpleGenerators(level, pos, state).stream(),
+                FlowstoneGenerator.getFlowstoneGenerators(level, state).stream())).orElse(state);
     }
 
-    private static final Optional<BlockState> replace(LevelAccessor level, BlockPos pos,
-            Set<? extends BiFunction<LevelAccessor, BlockPos, Optional<BlockState>>> generators) {
-        var states = generators.stream()
+    private static final Optional<BlockState> replace(LevelAccessor level, BlockPos pos, Stream<Generator> generators) {
+        var states = generators
                 .map(generator -> generator.apply(level, pos))
                 .flatMap(Optional::stream).toList();
         return states.isEmpty() ? Optional.empty()
