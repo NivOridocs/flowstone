@@ -22,6 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.flowstone.api.Replacer;
+import niv.flowstone.config.ConfigurationLoader;
 import niv.flowstone.impl.CustomGenerator;
 import niv.flowstone.impl.DeepslateGenerator;
 import niv.flowstone.impl.WorldlyGenerator;
@@ -45,6 +46,8 @@ public class Flowstone implements ModInitializer {
         // However, some things (like resources) may still be uninitialized.
         // Proceed with mild caution.
         LOGGER.info("Initialize");
+
+        ConfigurationLoader.load();
 
         DynamicRegistries.register(CustomGenerator.REGISTRY, CustomGenerator.CODEC);
 
