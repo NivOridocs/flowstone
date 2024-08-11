@@ -127,20 +127,23 @@ public class WorldlyGenerator implements Generator {
                 .map(value -> value.state).distinct()
                 .filter(value -> value.is(ConventionalBlockTags.ORES))
                 .map(value -> new WorldlyGenerator(value,
-                        base.get().blockCount() + config.get().size,
+                        base.get().blockCount() * Math.max(1, config.get().size),
                         base.get().maxBlockCount(),
                         base.get().function()))
                 .collect(toSet());
     }
 
     private static final class BaseGeneratorBuilder {
-        private Integer blockCount = null;
+        private Integer blockCount = 1;
         private Integer maxBlockCount = null;
         private Int2DoubleFunction function = null;
 
         public BaseGeneratorBuilder blockCountMultiply(int value) {
-            this.blockCount = this.blockCount == null ? 1 : this.blockCount;
-            this.blockCount *= value;
+            if (this.blockCount == null) {
+                this.blockCount = value;
+            } else {
+                this.blockCount *= value;
+            }
             return this;
         }
 
@@ -178,7 +181,7 @@ public class WorldlyGenerator implements Generator {
 
     private static final void processCount(
             BaseGeneratorBuilder builder, CountPlacement modifier) {
-        builder.blockCountMultiply(modifier.count.getMaxValue());
+        builder.blockCountMultiply((modifier.count.getMaxValue() + modifier.count.getMaxValue()) / 2);
     }
 
     private static record UniformFunction(int minY, int maxY)
