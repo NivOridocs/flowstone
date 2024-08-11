@@ -1,5 +1,6 @@
 package niv.flowstone;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -20,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class Flowstone implements ModInitializer {
@@ -65,7 +67,18 @@ public class Flowstone implements ModInitializer {
                         : ResourcePackActivationType.NORMAL);
     }
 
-    public static final Optional<BlockState> replace(LevelAccessor level, BlockPos pos,
+    public static final BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
+        var generators = new HashSet<>(FlowstoneGenerator.getFlowstoneGenerators(level, state));
+        if (state.is(Blocks.STONE)) {
+            generators.addAll(SimpleGenerator.getSimpleStoneGenerators(level, pos));
+        }
+        if (state.is(Blocks.NETHERRACK)) {
+            generators.addAll(SimpleGenerator.getSimpleNetherrackGenerators(level, pos));
+        }
+        return replace(level, pos, generators).orElse(state);
+    }
+
+    private static final Optional<BlockState> replace(LevelAccessor level, BlockPos pos,
             Set<? extends BiFunction<LevelAccessor, BlockPos, Optional<BlockState>>> generators) {
         var states = generators.stream()
                 .map(generator -> generator.apply(level, pos))

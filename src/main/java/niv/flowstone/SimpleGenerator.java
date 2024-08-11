@@ -9,10 +9,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
@@ -20,6 +20,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents.Load;
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBlockTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -33,16 +34,17 @@ import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguratio
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacementContext;
 import net.minecraft.world.level.levelgen.placement.PlacementModifier;
+import niv.flowstone.api.Generator;
 
-public class SimpleGenerator implements BiFunction<LevelAccessor, BlockPos, Optional<BlockState>> {
+public class SimpleGenerator implements Generator {
 
     public static final int GENERATOR_AMPLIFIER = 16;
 
-    private static final Map<ResourceLocation, Set<SimpleGenerator>> featureStoneCache = new HashMap<>(256);
-    private static final Map<ResourceLocation, Set<SimpleGenerator>> biomeStoneCache = new HashMap<>(64);
+    private static final Map<ResourceLocation, Set<Generator>> featureStoneCache = new HashMap<>(256);
+    private static final Map<ResourceLocation, Set<Generator>> biomeStoneCache = new HashMap<>(64);
 
-    private static final Map<ResourceLocation, Set<SimpleGenerator>> featureNetherrackCache = new HashMap<>(256);
-    private static final Map<ResourceLocation, Set<SimpleGenerator>> biomeNetherrackCache = new HashMap<>(64);
+    private static final Map<ResourceLocation, Set<Generator>> featureNetherrackCache = new HashMap<>(256);
+    private static final Map<ResourceLocation, Set<Generator>> biomeNetherrackCache = new HashMap<>(64);
 
     private final Cache<BlockPos, Set<BlockPos>> cache;
 
@@ -93,32 +95,52 @@ public class SimpleGenerator implements BiFunction<LevelAccessor, BlockPos, Opti
         }
     }
 
-    public static final Set<SimpleGenerator> getSimpleStoneGenerators(LevelAccessor level, BlockPos pos) {
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("state", this.state).toString();
+    }
+
+    public static final Set<Generator> getSimpleStoneGenerators(LevelAccessor level, BlockPos pos) {
+        return getSimpleGenerators(SimpleGenerator.biomeStoneCache, SimpleGenerator.featureStoneCache,
+                level, pos, Blocks.STONE.defaultBlockState());
+    }
+
+    public static final Set<Generator> getSimpleNetherrackGenerators(LevelAccessor level, BlockPos pos) {
+        return getSimpleGenerators(SimpleGenerator.biomeNetherrackCache, SimpleGenerator.featureNetherrackCache,
+                level, pos, Blocks.NETHERRACK.defaultBlockState());
+    }
+
+    private static final Set<Generator> getSimpleGenerators(
+            Map<ResourceLocation, Set<Generator>> biomeCache,
+            Map<ResourceLocation, Set<Generator>> featureCache,
+            LevelAccessor level, BlockPos pos, BlockState state) {
         var biome = level.getBiome(pos).value();
         var biomeKey = level.registryAccess().registryOrThrow(Registries.BIOME).getKey(biome);
-        return biomeStoneCache.computeIfAbsent(biomeKey,
-                key -> biome.getGenerationSettings().features()
-                        .get(6).stream()
+        return biomeCache.computeIfAbsent(biomeKey,
+                key -> biome.getGenerationSettings().features().stream()
+                        .flatMap(HolderSet::stream)
                         .map(Holder::value)
-                        .map(feature -> getSimpleStoneGenerators(level, feature))
+                        .map(feature -> getSimpleGenerators(featureCache, level, feature, state))
                         .flatMap(Set::stream)
                         .collect(toSet()));
     }
 
-    private static final Set<SimpleGenerator> getSimpleStoneGenerators(LevelAccessor level, PlacedFeature feature) {
+    private static final Set<Generator> getSimpleGenerators(
+            Map<ResourceLocation, Set<Generator>> featureCache,
+            LevelAccessor level, PlacedFeature feature, BlockState state) {
         var featureKey = level.registryAccess().registryOrThrow(Registries.PLACED_FEATURE).getKey(feature);
-        return featureStoneCache.computeIfAbsent(featureKey,
+        return featureCache.computeIfAbsent(featureKey,
                 key -> feature.getFeatures()
                         .map(ConfiguredFeature::config)
                         .filter(OreConfiguration.class::isInstance)
                         .findFirst().stream()
                         .map(OreConfiguration.class::cast)
                         .flatMap(config -> config.targetStates.stream())
-                        .filter(target -> target.target.test(Blocks.STONE.defaultBlockState(), RandomSource.create(0)))
+                        .filter(target -> target.target.test(state, RandomSource.create(0)))
                         .map(target -> target.state).distinct()
-                        .filter(state -> state.is(ConventionalBlockTags.ORES))
-                        .flatMap(state -> feature.placement().isEmpty() ? Stream.empty()
-                                : Stream.of(new SimpleGenerator(feature, state, feature.placement())))
+                        .filter(s -> s.is(ConventionalBlockTags.ORES))
+                        .flatMap(s -> feature.placement().isEmpty() ? Stream.empty()
+                                : Stream.of(new SimpleGenerator(feature, s, feature.placement())))
                         .collect(toSet()));
     }
 

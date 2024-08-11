@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toSet;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import com.mojang.serialization.Codec;
@@ -16,10 +15,10 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import niv.flowstone.api.Generator;
 
-public class FlowstoneGenerator implements Predicate<BlockState>, BiFunction<LevelAccessor, BlockPos, Optional<BlockState>> {
+public class FlowstoneGenerator implements Predicate<BlockState>, Generator {
 
     public static final Codec<FlowstoneGenerator> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             BuiltInRegistries.BLOCK.byNameCodec().fieldOf("replace").forGetter(r -> r.replace),
@@ -49,14 +48,7 @@ public class FlowstoneGenerator implements Predicate<BlockState>, BiFunction<Lev
         return level.getRandom().nextDouble() <= this.chance ? Optional.of(with.defaultBlockState()) : Optional.empty();
     }
 
-    public static final Set<FlowstoneGenerator> getFlowstoneStoneGenerators(LevelAccessor level) {
-        return level.registryAccess().registry(Flowstone.GENERATOR).stream()
-                .flatMap(Registry::stream)
-                .filter(generator -> generator.test(Blocks.STONE.defaultBlockState()))
-                .collect(toSet());
-    }
-
-    public static final Set<FlowstoneGenerator> getFlowstoneStoneGenerators(LevelAccessor level, BlockState state) {
+    public static final Set<Generator> getFlowstoneGenerators(LevelAccessor level, BlockState state) {
         return level.registryAccess().registry(Flowstone.GENERATOR).stream()
                 .flatMap(Registry::stream)
                 .filter(generator -> generator.test(state))
