@@ -14,13 +14,13 @@ import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.flowstone.api.Generator;
+import niv.flowstone.impl.CustomGenerator;
+import niv.flowstone.impl.WorldlyGenerator;
 
 public class Flowstone implements ModInitializer {
     // This logger is used to write text to the console and the log file.
@@ -28,16 +28,7 @@ public class Flowstone implements ModInitializer {
     // That way, it's clear which mod wrote info, warnings, and errors.
     public static final Logger LOGGER = LoggerFactory.getLogger("Flowstone");
 
-    public static final String MOD_ID;
-
-    public static final ResourceKey<Registry<FlowstoneGenerator>> GENERATOR;
-
-    static {
-        MOD_ID = "flowstone";
-
-        GENERATOR = ResourceKey.<FlowstoneGenerator>createRegistryKey(new ResourceLocation(MOD_ID, "generators"));
-        DynamicRegistries.register(GENERATOR, FlowstoneGenerator.CODEC);
-    }
+    public static final String MOD_ID = "flowstone";
 
     @Override
     public void onInitialize() {
@@ -46,7 +37,9 @@ public class Flowstone implements ModInitializer {
         // Proceed with mild caution.
         LOGGER.info("Initialize");
 
-        ServerWorldEvents.LOAD.register(new SimpleGenerator.CacheInvalidator());
+        DynamicRegistries.register(CustomGenerator.REGISTRY, CustomGenerator.CODEC);
+
+        ServerWorldEvents.LOAD.register(new WorldlyGenerator.CacheInvalidator());
 
         var container = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
 
@@ -67,8 +60,8 @@ public class Flowstone implements ModInitializer {
 
     public static final BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
         return replace(level, pos, Stream.concat(
-                SimpleGenerator.getSimpleGenerators(level, pos, state).stream(),
-                FlowstoneGenerator.getFlowstoneGenerators(level, state).stream())).orElse(state);
+                WorldlyGenerator.getGenerators(level, pos, state).stream(),
+                CustomGenerator.getGenerators(level, state).stream())).orElse(state);
     }
 
     private static final Optional<BlockState> replace(LevelAccessor level, BlockPos pos, Stream<Generator> generators) {

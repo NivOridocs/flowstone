@@ -1,4 +1,4 @@
-package niv.flowstone;
+package niv.flowstone.impl;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -32,11 +32,10 @@ import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguratio
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacementContext;
 import net.minecraft.world.level.levelgen.placement.PlacementModifier;
+import niv.flowstone.Constants;
 import niv.flowstone.api.Generator;
 
-public class SimpleGenerator implements Generator {
-
-    public static final int GENERATOR_AMPLIFIER = 16;
+public class WorldlyGenerator implements Generator {
 
     private static final Table<Block, Biome, Set<Generator>> biomeCache = HashBasedTable.create();
     private static final Table<Block, PlacedFeature, Set<Generator>> featureCache = HashBasedTable.create();
@@ -49,7 +48,7 @@ public class SimpleGenerator implements Generator {
 
     private final List<PlacementModifier> modifiers;
 
-    private SimpleGenerator(PlacedFeature feature, BlockState state, List<PlacementModifier> modifiers) {
+    private WorldlyGenerator(PlacedFeature feature, BlockState state, List<PlacementModifier> modifiers) {
         this.feature = Optional.of(feature);
         this.state = state;
         this.modifiers = modifiers;
@@ -80,7 +79,7 @@ public class SimpleGenerator implements Generator {
     private Set<BlockPos> loadModifiers(LevelAccessor accessor, BlockPos origin) {
         if (accessor instanceof ServerLevel level) {
             var context = new PlacementContext(level, level.getChunkSource().getGenerator(), feature);
-            var stream = IntStream.range(0, GENERATOR_AMPLIFIER).mapToObj(i -> origin);
+            var stream = IntStream.range(0, Constants.AMPLIFICATION).mapToObj(i -> origin);
             for (var modifier : this.modifiers) {
                 stream = stream.flatMap(pos -> modifier.getPositions(context, level.getRandom(), pos));
             }
@@ -90,14 +89,14 @@ public class SimpleGenerator implements Generator {
         }
     }
 
-    public static final Set<Generator> getSimpleGenerators(LevelAccessor level, BlockPos pos, BlockState state) {
+    public static final Set<Generator> getGenerators(LevelAccessor level, BlockPos pos, BlockState state) {
         var biome = level.getBiome(pos).value();
         var result = biomeCache.get(state.getBlock(), biome);
         if (result == null) {
             result = biome.getGenerationSettings().features().stream()
                     .flatMap(HolderSet::stream)
                     .map(Holder::value)
-                    .map(feature -> getSimpleGenerators(feature, state))
+                    .map(feature -> getGenerators(feature, state))
                     .flatMap(Set::stream)
                     .collect(toSet());
             biomeCache.put(state.getBlock(), biome, result);
@@ -105,7 +104,7 @@ public class SimpleGenerator implements Generator {
         return result;
     }
 
-    private static final Set<Generator> getSimpleGenerators(PlacedFeature feature, BlockState state) {
+    private static final Set<Generator> getGenerators(PlacedFeature feature, BlockState state) {
         var result = featureCache.get(state.getBlock(), feature);
         if (result == null) {
             result = feature.getFeatures()
@@ -118,7 +117,7 @@ public class SimpleGenerator implements Generator {
                     .map(target -> target.state).distinct()
                     .filter(s -> s.is(ConventionalBlockTags.ORES))
                     .flatMap(s -> feature.placement().isEmpty() ? Stream.empty()
-                            : Stream.of(new SimpleGenerator(feature, s, feature.placement())))
+                            : Stream.of(new WorldlyGenerator(feature, s, feature.placement())))
                     .collect(toSet());
             featureCache.put(state.getBlock(), feature, result);
         }
@@ -128,8 +127,8 @@ public class SimpleGenerator implements Generator {
     public static final class CacheInvalidator implements Load {
         @Override
         public void onWorldLoad(MinecraftServer server, ServerLevel level) {
-            SimpleGenerator.biomeCache.clear();
-            SimpleGenerator.featureCache.clear();
+            WorldlyGenerator.biomeCache.clear();
+            WorldlyGenerator.featureCache.clear();
         }
     }
 }

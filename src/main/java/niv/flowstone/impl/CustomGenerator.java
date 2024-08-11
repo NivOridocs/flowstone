@@ -1,4 +1,4 @@
-package niv.flowstone;
+package niv.flowstone.impl;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
@@ -13,18 +13,24 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import niv.flowstone.Flowstone;
 import niv.flowstone.api.Generator;
 
-public class FlowstoneGenerator implements Predicate<BlockState>, Generator {
+public class CustomGenerator implements Predicate<BlockState>, Generator {
 
-    public static final Codec<FlowstoneGenerator> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+    public static final Codec<CustomGenerator> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             BuiltInRegistries.BLOCK.byNameCodec().fieldOf("replace").forGetter(r -> r.replace),
             BuiltInRegistries.BLOCK.byNameCodec().fieldOf("with").forGetter(r -> r.with),
             Codec.doubleRange(0d, 1d).fieldOf("chance").forGetter(r -> r.chance))
-            .apply(instance, FlowstoneGenerator::new));
+            .apply(instance, CustomGenerator::new));
+
+    public static final ResourceKey<Registry<CustomGenerator>> REGISTRY = ResourceKey
+            .createRegistryKey(new ResourceLocation(Flowstone.MOD_ID, "generators"));
 
     private final Block replace;
 
@@ -32,7 +38,7 @@ public class FlowstoneGenerator implements Predicate<BlockState>, Generator {
 
     private final double chance;
 
-    public FlowstoneGenerator(Block replace, Block with, double chance) {
+    public CustomGenerator(Block replace, Block with, double chance) {
         this.replace = requireNonNull(replace);
         this.with = requireNonNull(with);
         this.chance = chance;
@@ -48,8 +54,8 @@ public class FlowstoneGenerator implements Predicate<BlockState>, Generator {
         return level.getRandom().nextDouble() <= this.chance ? Optional.of(with.defaultBlockState()) : Optional.empty();
     }
 
-    public static final Set<Generator> getFlowstoneGenerators(LevelAccessor level, BlockState state) {
-        return level.registryAccess().registry(Flowstone.GENERATOR).stream()
+    public static final Set<Generator> getGenerators(LevelAccessor level, BlockState state) {
+        return level.registryAccess().registry(REGISTRY).stream()
                 .flatMap(Registry::stream)
                 .filter(generator -> generator.test(state))
                 .collect(toSet());
