@@ -46,13 +46,8 @@ public class FlowstoneGenerator implements Generator {
         return level.getRandom().nextDouble() <= this.chance ? Stream.of(with.defaultBlockState()) : Stream.empty();
     }
 
-    public static BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
-        var blocks = level.registryAccess().registry(Flowstone.GENERATOR).stream()
-                .flatMap(Registry::stream)
-                .filter(g -> g.test(level.getRandom(), state))
-                .flatMap(g -> g.apply(level, pos))
-                .toList();
-        return blocks.isEmpty() ? state
-                : blocks.get(level.getRandom().nextInt(blocks.size()));
+    public static Stream<FlowstoneGenerator> all(LevelAccessor level) {
+        return level.registryAccess().registry(Flowstone.GENERATOR).stream()
+                .flatMap(Registry::stream);
     }
 }

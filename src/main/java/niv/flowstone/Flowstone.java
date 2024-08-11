@@ -1,18 +1,24 @@
 package niv.flowstone;
 
+import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class Flowstone implements ModInitializer {
     // This logger is used to write text to the console and the log file.
@@ -38,9 +44,11 @@ public class Flowstone implements ModInitializer {
         // Proceed with mild caution.
         LOGGER.info("Initialize");
 
+        ServerWorldEvents.LOAD.register(new BiomeGenerator.CacheInvalidator());
+
         var container = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
 
-        registerDatapack(container, "overworld_ores", "Overworld Ores", true);
+        registerDatapack(container, "overworld_ores", "Overworld Ores", false);
         registerDatapack(container, "crying_obsidian", "Crying Obsidian", false);
         registerDatapack(container, "nether_ores", "Netherrack and Nether Ores", false);
     }
@@ -53,5 +61,16 @@ public class Flowstone implements ModInitializer {
                 enabled
                         ? ResourcePackActivationType.DEFAULT_ENABLED
                         : ResourcePackActivationType.NORMAL);
+    }
+
+    public static final BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
+        var states = Stream.concat(
+                FlowstoneGenerator.all(level),
+                BiomeGenerator.all(level, pos))
+                .filter(generator -> generator.test(level.getRandom(), state))
+                .flatMap(generator -> generator.apply(level, pos))
+                .toList();
+        return states.isEmpty() ? state
+                : states.get(level.getRandom().nextInt(states.size()));
     }
 }

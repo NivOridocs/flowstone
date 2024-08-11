@@ -1,6 +1,6 @@
 package niv.flowstone.mixin;
 
-import static niv.flowstone.FlowstoneGenerator.replace;
+import static niv.flowstone.Flowstone.replace;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
