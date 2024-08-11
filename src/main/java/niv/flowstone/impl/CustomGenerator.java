@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import com.google.common.base.MoreObjects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -59,5 +60,14 @@ public class CustomGenerator implements Predicate<BlockState>, Generator {
                 .flatMap(Registry::stream)
                 .filter(generator -> generator.test(state))
                 .collect(toSet());
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("replace", this.replace)
+                .add("with", this.with)
+                .add("chance", this.chance)
+                .toString();
     }
 }
