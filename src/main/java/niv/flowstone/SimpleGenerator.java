@@ -17,6 +17,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents.Load;
+import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBlockTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -34,6 +35,8 @@ import net.minecraft.world.level.levelgen.placement.PlacementContext;
 import net.minecraft.world.level.levelgen.placement.PlacementModifier;
 
 public class SimpleGenerator implements BiFunction<LevelAccessor, BlockPos, Optional<BlockState>> {
+
+    public static final int GENERATOR_AMPLIFIER = 16;
 
     private static final Map<ResourceLocation, Set<SimpleGenerator>> featureStoneCache = new HashMap<>(256);
     private static final Map<ResourceLocation, Set<SimpleGenerator>> biomeStoneCache = new HashMap<>(64);
@@ -80,7 +83,7 @@ public class SimpleGenerator implements BiFunction<LevelAccessor, BlockPos, Opti
     private Set<BlockPos> loadModifiers(LevelAccessor accessor, BlockPos origin) {
         if (accessor instanceof ServerLevel level) {
             var context = new PlacementContext(level, level.getChunkSource().getGenerator(), feature);
-            var stream = IntStream.range(0, 16).mapToObj(i -> origin);
+            var stream = IntStream.range(0, GENERATOR_AMPLIFIER).mapToObj(i -> origin);
             for (var modifier : this.modifiers) {
                 stream = stream.flatMap(pos -> modifier.getPositions(context, level.getRandom(), pos));
             }
@@ -113,6 +116,7 @@ public class SimpleGenerator implements BiFunction<LevelAccessor, BlockPos, Opti
                         .flatMap(config -> config.targetStates.stream())
                         .filter(target -> target.target.test(Blocks.STONE.defaultBlockState(), RandomSource.create(0)))
                         .map(target -> target.state).distinct()
+                        .filter(state -> state.is(ConventionalBlockTags.ORES))
                         .flatMap(state -> feature.placement().isEmpty() ? Stream.empty()
                                 : Stream.of(new SimpleGenerator(feature, state, feature.placement())))
                         .collect(toSet()));
