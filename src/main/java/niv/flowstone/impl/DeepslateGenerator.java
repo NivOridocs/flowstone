@@ -45,7 +45,7 @@ public class DeepslateGenerator implements Generator {
 
     @Override
     public Optional<BlockState> apply(LevelAccessor level, BlockPos pos) {
-        return Optional.of(state).filter(value -> test(level.getRandom(), pos.getY()));
+        return Optional.of(this.state).filter(value -> test(level.getRandom(), pos.getY()));
     }
 
     private boolean test(RandomSource random, int y) {
@@ -61,7 +61,9 @@ public class DeepslateGenerator implements Generator {
                 cache.put(serverLevel, result);
             }
         }
-        return Optional.ofNullable(result.get(state.getBlock())).flatMap(value -> value.apply(level, pos));
+        return Optional.ofNullable(result.get(state.getBlock()))
+                .flatMap(value -> value.apply(level, pos))
+                .or(() -> Optional.of(state));
     }
 
     private static Map<Block, Generator> loadGenerators(ServerLevel level) {
@@ -88,8 +90,10 @@ public class DeepslateGenerator implements Generator {
             var context = new WorldGenerationContext(level.getChunkSource().getGenerator(), level);
             var maxY = gradient.get().falseAtAndAbove().resolveY(context);
             var minY = gradient.get().trueAtAndBelow().resolveY(context);
-            result.put(Blocks.STONE,  new DeepslateGenerator(Blocks.DEEPSLATE.defaultBlockState(), maxY, minY));
-            result.put(Blocks.COBBLESTONE, new DeepslateGenerator(Blocks.COBBLED_DEEPSLATE.defaultBlockState(), maxY, minY));
+            result.put(Blocks.STONE,
+                    new DeepslateGenerator(Blocks.DEEPSLATE.defaultBlockState(), maxY, minY));
+            result.put(Blocks.COBBLESTONE,
+                    new DeepslateGenerator(Blocks.COBBLED_DEEPSLATE.defaultBlockState(), maxY, minY));
         }
         return result;
     }
@@ -110,8 +114,7 @@ public class DeepslateGenerator implements Generator {
 
     public static final Replacer getReplacer() {
         return Replacers.defaultedMultiReplacer(
-            Replacers.allowedBlocksEmptyingReplacer(Blocks.STONE, Blocks.COBBLESTONE),
-            DeepslateGenerator::applyAny
-        );
+                Replacers.allowedBlocksEmptyingReplacer(Blocks.STONE, Blocks.COBBLESTONE),
+                DeepslateGenerator::applyAny);
     }
 }
