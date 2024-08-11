@@ -244,8 +244,7 @@ public class WorldlyGenerator implements Generator {
 
     public static final Replacer getReplacer() {
         return Replacers.defaultedMultiReplacer(
-            Replacers.allowedBlocksEmptyingReplacer(Blocks.STONE, Blocks.NETHERRACK),
-            WorldlyGenerator::applyAll
-        );
+                Replacers.allowedBlocksEmptyingReplacer(Blocks.STONE, Blocks.DEEPSLATE, Blocks.NETHERRACK),
+                WorldlyGenerator::applyAll);
     }
 }
