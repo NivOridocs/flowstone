@@ -82,7 +82,7 @@ public class WorldlyGenerator implements Generator {
                 .toString();
     }
 
-    private static final Optional<BlockState> applyAll(LevelAccessor accessor, BlockPos pos, BlockState state) {
+    private static final BlockState applyAll(LevelAccessor accessor, BlockPos pos, BlockState state) {
         var biome = accessor.getBiome(pos).value();
         var result = biomeCache.get(state.getBlock(), biome);
         if (result == null) {
@@ -104,7 +104,7 @@ public class WorldlyGenerator implements Generator {
             }
             biomeCache.put(state.getBlock(), biome, result);
         }
-        return Generator.applyAll(result, accessor, pos).or(() -> Optional.of(state));
+        return Generator.applyAll(result, accessor, pos).orElse(state);
     }
 
     private static final Set<Generator> loadGenerators(ServerLevel level, PlacedFeature feature, BlockState state) {
@@ -246,7 +246,7 @@ public class WorldlyGenerator implements Generator {
 
     public static final Replacer getReplacer() {
         return Replacers.defaultedMultiReplacer(
-                Replacers.allowedBlocksEmptyingReplacer(Blocks.STONE, Blocks.DEEPSLATE, Blocks.NETHERRACK),
+                Replacers.allowedBlocksNullableReplacer(Blocks.STONE, Blocks.DEEPSLATE, Blocks.NETHERRACK),
                 WorldlyGenerator::applyAll);
     }
 }

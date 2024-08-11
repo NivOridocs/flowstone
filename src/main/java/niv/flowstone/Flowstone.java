@@ -1,5 +1,7 @@
 package niv.flowstone;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +65,6 @@ public class Flowstone implements ModInitializer {
     }
 
     public static final BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
-        return Replacers.configuredReplacer().apply(level, pos, state).orElse(state);
+        return Optional.ofNullable(Replacers.configuredReplacer().apply(level, pos, state)).orElse(state);
     }
 }

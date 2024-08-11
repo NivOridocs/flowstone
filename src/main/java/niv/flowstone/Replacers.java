@@ -20,36 +20,36 @@ import niv.flowstone.impl.WorldlyGenerator;
 
 public class Replacers {
 
-    private static final Replacer NO_OP = (level, pos, state) -> Optional.of(state);
+    private static final Replacer NO_OP = (level, pos, state) -> state;
 
     private static final AtomicReference<Replacer> CONFIGURED_REPLACER = new AtomicReference<>();
 
     private Replacers() {
     }
 
-    private static record AllowedBlocksEmptyingReplacer(ImmutableList<Block> allowed) implements Replacer {
+    private static record AllowedBlocksNullableReplacer(ImmutableList<Block> allowed) implements Replacer {
         @Override
-        public Optional<BlockState> apply(LevelAccessor level, BlockPos pos, BlockState state) {
-            return Optional.of(state).filter(value -> allowed.stream().anyMatch(value::is));
+        public BlockState apply(LevelAccessor level, BlockPos pos, BlockState state) {
+            return allowed().stream().anyMatch(state::is) ? state : null;
         }
     }
 
-    public static final Replacer allowedBlocksEmptyingReplacer(Collection<Block> blocks) {
-        return new AllowedBlocksEmptyingReplacer(ImmutableList.copyOf(blocks));
+    public static final Replacer allowedBlocksNullableReplacer(Collection<Block> blocks) {
+        return new AllowedBlocksNullableReplacer(ImmutableList.copyOf(blocks));
     }
 
-    public static final Replacer allowedBlocksEmptyingReplacer(Block... blocks) {
-        return new AllowedBlocksEmptyingReplacer(ImmutableList.copyOf(blocks));
+    public static final Replacer allowedBlocksNullableReplacer(Block... blocks) {
+        return new AllowedBlocksNullableReplacer(ImmutableList.copyOf(blocks));
     }
 
     private static record DefaultedMultiReplacer(ImmutableList<Replacer> replacers) implements Replacer {
         @Override
-        public Optional<BlockState> apply(LevelAccessor level, BlockPos pos, BlockState state) {
+        public BlockState apply(LevelAccessor level, BlockPos pos, BlockState state) {
             var result = Optional.of(state);
             for (var replacer : replacers) {
-                result = result.flatMap(value -> replacer.apply(level, pos, value));
+                result = result.map(value -> replacer.apply(level, pos, value));
             }
-            return result.or(() -> Optional.of(state));
+            return result.orElse(state);
         }
     }
 

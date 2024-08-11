@@ -62,8 +62,8 @@ public class CustomGenerator implements Predicate<BlockState>, Generator {
         return debugMode() ||  random.nextDouble() <= this.chance;
     }
 
-    private static final Optional<BlockState> applyAll(LevelAccessor level, BlockPos pos, BlockState state) {
-        return Generator.applyAll(getGenerators(level, state), level, pos).or(() -> Optional.of(state));
+    private static final BlockState applyAll(LevelAccessor level, BlockPos pos, BlockState state) {
+        return Generator.applyAll(getGenerators(level, state), level, pos).orElse(state);
     }
 
     private static final Set<Generator> getGenerators(LevelAccessor level, BlockState state) {

@@ -52,7 +52,7 @@ public class DeepslateGenerator implements Generator {
         return y <= minY || y < maxY && random.nextDouble() < Mth.map(y, minY, maxY, 1d, 0d);
     }
 
-    private static final Optional<BlockState> applyAny(LevelAccessor level, BlockPos pos, BlockState state) {
+    private static final BlockState applyAny(LevelAccessor level, BlockPos pos, BlockState state) {
         var result = cache.get(level);
         if (result == null) {
             result = Map.of();
@@ -63,7 +63,7 @@ public class DeepslateGenerator implements Generator {
         }
         return Optional.ofNullable(result.get(state.getBlock()))
                 .flatMap(value -> value.apply(level, pos))
-                .or(() -> Optional.of(state));
+                .orElse(state);
     }
 
     private static Map<Block, Generator> loadGenerators(ServerLevel level) {
@@ -114,7 +114,7 @@ public class DeepslateGenerator implements Generator {
 
     public static final Replacer getReplacer() {
         return Replacers.defaultedMultiReplacer(
-                Replacers.allowedBlocksEmptyingReplacer(Blocks.STONE, Blocks.COBBLESTONE),
+                Replacers.allowedBlocksNullableReplacer(Blocks.STONE, Blocks.COBBLESTONE),
                 DeepslateGenerator::applyAny);
     }
 }
