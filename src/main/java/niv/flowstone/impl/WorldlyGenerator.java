@@ -17,13 +17,14 @@ import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBlockTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.WorldGenerationContext;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
 import net.minecraft.world.level.levelgen.heightproviders.TrapezoidHeight;
@@ -31,8 +32,9 @@ import net.minecraft.world.level.levelgen.heightproviders.UniformHeight;
 import net.minecraft.world.level.levelgen.placement.CountPlacement;
 import net.minecraft.world.level.levelgen.placement.HeightRangePlacement;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
-import net.minecraft.world.level.levelgen.placement.PlacementContext;
+import niv.flowstone.Replacers;
 import niv.flowstone.api.Generator;
+import niv.flowstone.api.Replacer;
 
 public class WorldlyGenerator implements Generator {
 
@@ -78,7 +80,7 @@ public class WorldlyGenerator implements Generator {
                 .toString();
     }
 
-    public static final Set<Generator> getGenerators(LevelAccessor accessor, BlockPos pos, BlockState state) {
+    private static final Optional<BlockState> applyAll(LevelAccessor accessor, BlockPos pos, BlockState state) {
         var biome = accessor.getBiome(pos).value();
         var result = biomeCache.get(state.getBlock(), biome);
         if (result == null) {
@@ -86,24 +88,21 @@ public class WorldlyGenerator implements Generator {
                 result = biome.getGenerationSettings().features().stream()
                         .flatMap(HolderSet::stream)
                         .map(Holder::value)
-                        .map(feature -> getGenerators(level, feature, state))
-                        .flatMap(Set::stream)
+                        .flatMap(value -> {
+                            var generators = featureCache.get(state.getBlock(), value);
+                            if (generators == null) {
+                                generators = loadGenerators(level, value, state);
+                                featureCache.put(state.getBlock(), value, generators);
+                            }
+                            return generators.stream();
+                        })
                         .collect(toSet());
             } else {
                 result = Set.of();
             }
             biomeCache.put(state.getBlock(), biome, result);
         }
-        return result;
-    }
-
-    private static final Set<Generator> getGenerators(ServerLevel level, PlacedFeature feature, BlockState state) {
-        var result = featureCache.get(state.getBlock(), feature);
-        if (result == null) {
-            result = loadGenerators(level, feature, state);
-            featureCache.put(state.getBlock(), feature, result);
-        }
-        return result;
+        return Generator.applyAll(result, accessor, pos).or(() -> Optional.of(state));
     }
 
     private static final Set<Generator> loadGenerators(ServerLevel level, PlacedFeature feature, BlockState state) {
@@ -168,7 +167,7 @@ public class WorldlyGenerator implements Generator {
 
     private static final Optional<BaseGenerator> loadBaseGenerator(ServerLevel level, PlacedFeature feature) {
         var builder = new BaseGeneratorBuilder();
-        var context = new PlacementContext(level, level.getChunkSource().getGenerator(), Optional.of(feature));
+        var context = new WorldGenerationContext(level.getChunkSource().getGenerator(), level);
         for (var element : feature.placement()) {
             if (element instanceof CountPlacement modifier) {
                 processCount(builder, modifier);
@@ -181,7 +180,7 @@ public class WorldlyGenerator implements Generator {
 
     private static final void processCount(
             BaseGeneratorBuilder builder, CountPlacement modifier) {
-        builder.blockCountMultiply((modifier.count.getMaxValue() + modifier.count.getMaxValue()) / 2);
+        builder.blockCountMultiply(modifier.count.getMaxValue());
     }
 
     private static record UniformFunction(int minY, int maxY)
@@ -210,7 +209,7 @@ public class WorldlyGenerator implements Generator {
     }
 
     private static final void processHeightRange(
-            BaseGeneratorBuilder builder, PlacementContext context, HeightRangePlacement modifier) {
+            BaseGeneratorBuilder builder, WorldGenerationContext context, HeightRangePlacement modifier) {
         if (modifier.height instanceof UniformHeight uniform) {
             int maxY = uniform.maxInclusive.resolveY(context);
             int minY = uniform.minInclusive.resolveY(context);
@@ -235,12 +234,18 @@ public class WorldlyGenerator implements Generator {
         }
     }
 
-    public static final class CacheInvalidator implements Load {
-        @Override
-        public void onWorldLoad(MinecraftServer server, ServerLevel level) {
+    public static final Load getCacheInvalidator() {
+        return (server, level) -> {
             WorldlyGenerator.biomeCache.clear();
             WorldlyGenerator.featureCache.clear();
             WorldlyGenerator.baseGeneratorCache.clear();
-        }
+        };
+    }
+
+    public static final Replacer getReplacer() {
+        return Replacers.defaultedMultiReplacer(
+            Replacers.allowedBlocksEmptyingReplacer(Blocks.STONE, Blocks.NETHERRACK),
+            WorldlyGenerator::applyAll
+        );
     }
 }

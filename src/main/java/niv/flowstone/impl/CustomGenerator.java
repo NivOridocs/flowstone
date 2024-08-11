@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.flowstone.Flowstone;
 import niv.flowstone.api.Generator;
+import niv.flowstone.api.Replacer;
 
 public class CustomGenerator implements Predicate<BlockState>, Generator {
 
@@ -55,7 +56,11 @@ public class CustomGenerator implements Predicate<BlockState>, Generator {
         return level.getRandom().nextDouble() <= this.chance ? Optional.of(with.defaultBlockState()) : Optional.empty();
     }
 
-    public static final Set<Generator> getGenerators(LevelAccessor level, BlockState state) {
+    private static final Optional<BlockState> applyAll(LevelAccessor level, BlockPos pos, BlockState state) {
+        return Generator.applyAll(getGenerators(level, state), level, pos).or(() -> Optional.of(state));
+    }
+
+    private static final Set<Generator> getGenerators(LevelAccessor level, BlockState state) {
         return level.registryAccess().registry(REGISTRY).stream()
                 .flatMap(Registry::stream)
                 .filter(generator -> generator.test(state))
@@ -69,5 +74,9 @@ public class CustomGenerator implements Predicate<BlockState>, Generator {
                 .add("with", this.with)
                 .add("chance", this.chance)
                 .toString();
+    }
+
+    public static final Replacer getReplacer() {
+        return CustomGenerator::applyAll;
     }
 }
