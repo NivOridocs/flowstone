@@ -2,9 +2,13 @@ package niv.flowstone;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents.Load;
@@ -28,14 +32,18 @@ import niv.flowstone.api.Generator;
 
 public class BiomeGenerator implements Generator {
 
-    private static final HashMap<ResourceLocation, List<BiomeGenerator>> biomeCache = new HashMap<>();
-    private static final HashMap<ResourceLocation, List<BiomeGenerator>> featureCache = new HashMap<>();
+    private static final Map<ResourceLocation, List<BiomeGenerator>> biomeCache = new HashMap<>();
+    private static final Map<ResourceLocation, List<BiomeGenerator>> featureCache = new HashMap<>();
 
     private final Optional<PlacedFeature> feature;
 
     private final TargetBlockState target;
 
     private final ImmutableList<PlacementModifier> modifiers;
+
+    private final Cache<BlockPos, List<BlockPos>> cache = CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.SECONDS)
+            .build();
 
     private BiomeGenerator(PlacedFeature feature, TargetBlockState target, List<PlacementModifier> modifier) {
         this.feature = Optional.of(feature);
@@ -50,17 +58,26 @@ public class BiomeGenerator implements Generator {
 
     @Override
     public Stream<BlockState> apply(LevelAccessor accessor, BlockPos pos) {
-        if (accessor instanceof ServerLevel level) {
-            var context = new PlacementContext(level, level.getChunkSource().getGenerator(), feature);
-            var stream = Stream.of(pos);
-            for (var modifier : this.modifiers) {
-                stream = stream.flatMap(x -> modifier.getPositions(context, level.getRandom(), x));
-            }
-            if (stream.anyMatch(pos::equals)) {
-                return Stream.of(target.state);
+        var zero = accessor.getChunk(pos).getPos().getWorldPosition().atY(pos.getY());
+        var result = cache.getIfPresent(zero);
+        if (result == null) {
+            if (accessor instanceof ServerLevel level) {
+                var context = new PlacementContext(level, level.getChunkSource().getGenerator(), feature);
+                var stream = Stream.of(zero);
+                for (var modifier : this.modifiers) {
+                    stream = stream.flatMap(x -> modifier.getPositions(context, level.getRandom(), x));
+                }
+                result = stream.toList();
+                cache.put(zero, result);
+            } else {
+                result = List.of();
             }
         }
-        return Stream.empty();
+        if (result.stream().anyMatch(pos::equals)) {
+            return Stream.of(target.state);
+        } else {
+            return Stream.empty();
+        }
     }
 
     public static Stream<BiomeGenerator> all(LevelAccessor level, BlockPos pos) {
