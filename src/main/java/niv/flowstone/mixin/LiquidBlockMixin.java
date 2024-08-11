@@ -1,5 +1,8 @@
 package niv.flowstone.mixin;
 
+import static niv.flowstone.config.Configuration.enableBasaltGeneration;
+import static niv.flowstone.config.Configuration.enableNetherrackGeneration;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -49,9 +52,9 @@ public abstract class LiquidBlockMixin {
             return Blocks.OBSIDIAN;
         } else if (isWater) {
             return Blocks.COBBLESTONE;
-        } else if (nearBlueIce && overSoulSoil) {
+        } else if (enableBasaltGeneration() && nearBlueIce && overSoulSoil) {
             return Blocks.BASALT;
-        } else if (nearBlueIce && inTheNether) {
+        } else if (enableNetherrackGeneration() && nearBlueIce && inTheNether) {
             return Blocks.NETHERRACK;
         } else {
             return null;

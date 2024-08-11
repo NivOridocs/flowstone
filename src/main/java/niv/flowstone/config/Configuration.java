@@ -15,6 +15,9 @@ public final class Configuration {
     private boolean allowWorldlyGenerators = true;
     private boolean allowCustomGenerators = false;
 
+    private boolean enableBasaltGeneration = false;
+    private boolean enableNetherrackGeneration = true;
+
     private Boolean debugMode = null;
 
     Configuration() {
@@ -42,6 +45,14 @@ public final class Configuration {
 
     public static final boolean allowCustomGenerators() {
         return getInstance().allowCustomGenerators;
+    }
+
+    public static final boolean enableBasaltGeneration() {
+        return getInstance().enableBasaltGeneration;
+    }
+
+    public static final boolean enableNetherrackGeneration() {
+        return getInstance().enableNetherrackGeneration;
     }
 
     public static final boolean debugMode() {
