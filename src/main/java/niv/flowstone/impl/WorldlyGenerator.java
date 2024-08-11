@@ -2,19 +2,16 @@ package niv.flowstone.impl;
 
 import static java.util.stream.Collectors.toSet;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import it.unimi.dsi.fastutil.ints.Int2DoubleFunction;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents.Load;
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBlockTags;
 import net.minecraft.core.BlockPos;
@@ -29,10 +26,12 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
+import net.minecraft.world.level.levelgen.heightproviders.TrapezoidHeight;
+import net.minecraft.world.level.levelgen.heightproviders.UniformHeight;
+import net.minecraft.world.level.levelgen.placement.CountPlacement;
+import net.minecraft.world.level.levelgen.placement.HeightRangePlacement;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacementContext;
-import net.minecraft.world.level.levelgen.placement.PlacementModifier;
-import niv.flowstone.Constants;
 import niv.flowstone.api.Generator;
 
 public class WorldlyGenerator implements Generator {
@@ -40,88 +39,200 @@ public class WorldlyGenerator implements Generator {
     private static final Table<Block, Biome, Set<Generator>> biomeCache = HashBasedTable.create();
     private static final Table<Block, PlacedFeature, Set<Generator>> featureCache = HashBasedTable.create();
 
-    private final Cache<BlockPos, Set<BlockPos>> cache;
+    private static record BaseGenerator(int blockCount, int maxBlockCount, Int2DoubleFunction function) {
+    }
 
-    private final Optional<PlacedFeature> feature;
+    private static final Map<PlacedFeature, Optional<BaseGenerator>> baseGeneratorCache = new HashMap<>();
 
     private final BlockState state;
 
-    private final List<PlacementModifier> modifiers;
+    private final int blockCount;
 
-    private WorldlyGenerator(PlacedFeature feature, BlockState state, List<PlacementModifier> modifiers) {
-        this.feature = Optional.of(feature);
+    private final int maxBlockCount;
+
+    private final Int2DoubleFunction function;
+
+    private WorldlyGenerator(BlockState state, int blockCount, int maxBlockCount, Int2DoubleFunction function) {
         this.state = state;
-        this.modifiers = modifiers;
-
-        this.cache = CacheBuilder.newBuilder()
-                .expireAfterWrite(1, TimeUnit.SECONDS)
-                .build();
+        this.blockCount = blockCount;
+        this.maxBlockCount = maxBlockCount;
+        this.function = function;
     }
 
     @Override
     public Optional<BlockState> apply(LevelAccessor level, BlockPos pos) {
-        if (applyModifiers(level, pos).anyMatch(pos::equals)) {
-            return Optional.of(state);
-        } else {
-            return Optional.empty();
-        }
+        return Optional.of(this.state).filter(x -> test(level.getRandom(), pos.getY()));
     }
 
-    private Stream<BlockPos> applyModifiers(LevelAccessor level, BlockPos pos) {
-        var origin = level.getChunk(pos).getPos().getWorldPosition();
-        try {
-            return cache.get(origin, () -> loadModifiers(level, origin)).stream();
-        } catch (ExecutionException ex) {
-            throw new IllegalStateException(ex);
-        }
+    private boolean test(RandomSource random, int y) {
+        return random.nextInt(this.maxBlockCount) < (this.blockCount * this.function.applyAsDouble(y));
     }
 
-    private Set<BlockPos> loadModifiers(LevelAccessor accessor, BlockPos origin) {
-        if (accessor instanceof ServerLevel level) {
-            var context = new PlacementContext(level, level.getChunkSource().getGenerator(), feature);
-            var stream = IntStream.range(0, Constants.AMPLIFICATION).mapToObj(i -> origin);
-            for (var modifier : this.modifiers) {
-                stream = stream.flatMap(pos -> modifier.getPositions(context, level.getRandom(), pos));
-            }
-            return stream.distinct().collect(toSet());
-        } else {
-            return Set.of();
-        }
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("state", this.state)
+                .add("blockCount", this.blockCount)
+                .add("maxBlockCount", this.maxBlockCount)
+                .add("function", this.function)
+                .toString();
     }
 
-    public static final Set<Generator> getGenerators(LevelAccessor level, BlockPos pos, BlockState state) {
-        var biome = level.getBiome(pos).value();
+    public static final Set<Generator> getGenerators(LevelAccessor accessor, BlockPos pos, BlockState state) {
+        var biome = accessor.getBiome(pos).value();
         var result = biomeCache.get(state.getBlock(), biome);
         if (result == null) {
-            result = biome.getGenerationSettings().features().stream()
-                    .flatMap(HolderSet::stream)
-                    .map(Holder::value)
-                    .map(feature -> getGenerators(feature, state))
-                    .flatMap(Set::stream)
-                    .collect(toSet());
+            if (accessor instanceof ServerLevel level) {
+                result = biome.getGenerationSettings().features().stream()
+                        .flatMap(HolderSet::stream)
+                        .map(Holder::value)
+                        .map(feature -> getGenerators(level, feature, state))
+                        .flatMap(Set::stream)
+                        .collect(toSet());
+            } else {
+                result = Set.of();
+            }
             biomeCache.put(state.getBlock(), biome, result);
         }
         return result;
     }
 
-    private static final Set<Generator> getGenerators(PlacedFeature feature, BlockState state) {
+    private static final Set<Generator> getGenerators(ServerLevel level, PlacedFeature feature, BlockState state) {
         var result = featureCache.get(state.getBlock(), feature);
         if (result == null) {
-            result = feature.getFeatures()
-                    .map(ConfiguredFeature::config)
-                    .filter(OreConfiguration.class::isInstance)
-                    .findFirst().stream()
-                    .map(OreConfiguration.class::cast)
-                    .flatMap(config -> config.targetStates.stream())
-                    .filter(target -> target.target.test(state, RandomSource.create(0)))
-                    .map(target -> target.state).distinct()
-                    .filter(s -> s.is(ConventionalBlockTags.ORES))
-                    .flatMap(s -> feature.placement().isEmpty() ? Stream.empty()
-                            : Stream.of(new WorldlyGenerator(feature, s, feature.placement())))
-                    .collect(toSet());
+            result = loadGenerators(level, feature, state);
             featureCache.put(state.getBlock(), feature, result);
         }
         return result;
+    }
+
+    private static final Set<Generator> loadGenerators(ServerLevel level, PlacedFeature feature, BlockState state) {
+        var base = baseGeneratorCache.computeIfAbsent(feature, key -> loadBaseGenerator(level, feature));
+        if (base.isEmpty()) {
+            return Set.of();
+        }
+
+        var config = feature.getFeatures()
+                .map(ConfiguredFeature::config)
+                .filter(OreConfiguration.class::isInstance)
+                .findFirst()
+                .map(OreConfiguration.class::cast);
+        if (config.isEmpty()) {
+            return Set.of();
+        }
+
+        return config.stream()
+                .flatMap(value -> value.targetStates.stream())
+                .filter(value -> value.target.test(state, RandomSource.create(0)))
+                .map(value -> value.state).distinct()
+                .filter(value -> value.is(ConventionalBlockTags.ORES))
+                .map(value -> new WorldlyGenerator(value,
+                        base.get().blockCount() * Math.max(1, config.get().size),
+                        base.get().maxBlockCount(),
+                        base.get().function()))
+                .collect(toSet());
+    }
+
+    private static final class BaseGeneratorBuilder {
+        private Integer blockCount = 1;
+        private Integer maxBlockCount = null;
+        private Int2DoubleFunction function = null;
+
+        public BaseGeneratorBuilder blockCountMultiply(int value) {
+            if (this.blockCount == null) {
+                this.blockCount = value;
+            } else {
+                this.blockCount *= value;
+            }
+            return this;
+        }
+
+        public BaseGeneratorBuilder maxBlockCount(int value) {
+            this.maxBlockCount = value;
+            return this;
+        }
+
+        public BaseGeneratorBuilder function(Int2DoubleFunction value) {
+            this.function = value;
+            return this;
+        }
+
+        public Optional<BaseGenerator> tryBuild() {
+            if (blockCount == null || maxBlockCount == null || function == null) {
+                return Optional.empty();
+            } else {
+                return Optional.of(new BaseGenerator(blockCount, maxBlockCount, function));
+            }
+        }
+    }
+
+    private static final Optional<BaseGenerator> loadBaseGenerator(ServerLevel level, PlacedFeature feature) {
+        var builder = new BaseGeneratorBuilder();
+        var context = new PlacementContext(level, level.getChunkSource().getGenerator(), Optional.of(feature));
+        for (var element : feature.placement()) {
+            if (element instanceof CountPlacement modifier) {
+                processCount(builder, modifier);
+            } else if (element instanceof HeightRangePlacement modifier) {
+                processHeightRange(builder, context, modifier);
+            }
+        }
+        return builder.tryBuild();
+    }
+
+    private static final void processCount(
+            BaseGeneratorBuilder builder, CountPlacement modifier) {
+        builder.blockCountMultiply((modifier.count.getMaxValue() + modifier.count.getMaxValue()) / 2);
+    }
+
+    private static record UniformFunction(int minY, int maxY)
+            implements Int2DoubleFunction {
+        @Override
+        public double get(int y) {
+            return minY <= y && y <= maxY ? 1d : 0d;
+        }
+    }
+
+    private static record TrapezoidFunction(int minY, int minL, int l, int maxL, int maxY)
+            implements Int2DoubleFunction {
+        @Override
+        public double get(int y) {
+            if (y >= minY) {
+                if (y < minL) {
+                    return (.0 + y - minY) / l;
+                } else if (y <= maxL) {
+                    return 1d;
+                } else if (y <= maxY) {
+                    return (.0 + l - y + minY) / l;
+                }
+            }
+            return 0d;
+        }
+    }
+
+    private static final void processHeightRange(
+            BaseGeneratorBuilder builder, PlacementContext context, HeightRangePlacement modifier) {
+        if (modifier.height instanceof UniformHeight uniform) {
+            int maxY = uniform.maxInclusive.resolveY(context);
+            int minY = uniform.minInclusive.resolveY(context);
+            builder
+                    .maxBlockCount(Math.max(0, maxY - minY) * 256)
+                    .function(new UniformFunction(minY, maxY));
+        } else if (modifier.height instanceof TrapezoidHeight trapezoid) {
+            int maxY = trapezoid.maxInclusive.resolveY(context);
+            int minY = trapezoid.minInclusive.resolveY(context);
+            int l = Math.max(0, maxY - minY - trapezoid.plateau) / 2;
+            if (l == 0) {
+                builder
+                        .maxBlockCount(Math.max(0, maxY - minY) * 256)
+                        .function(new UniformFunction(minY, maxY));
+            } else {
+                int maxL = maxY - l;
+                int minL = minY + l;
+                builder
+                        .maxBlockCount(Math.max(0, maxY - minY + trapezoid.plateau) * 128)
+                        .function(new TrapezoidFunction(minY, minL, l, maxL, maxY));
+            }
+        }
     }
 
     public static final class CacheInvalidator implements Load {
@@ -129,6 +240,7 @@ public class WorldlyGenerator implements Generator {
         public void onWorldLoad(MinecraftServer server, ServerLevel level) {
             WorldlyGenerator.biomeCache.clear();
             WorldlyGenerator.featureCache.clear();
+            WorldlyGenerator.baseGeneratorCache.clear();
         }
     }
 }
