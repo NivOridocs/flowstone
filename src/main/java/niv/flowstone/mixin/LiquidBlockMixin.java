@@ -8,6 +8,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import niv.flowstone.Flowstone;
+import niv.flowstone.FlowstoneGenerator;
 
 @Mixin(LiquidBlock.class)
 public class LiquidBlockMixin {
@@ -21,6 +23,7 @@ public class LiquidBlockMixin {
             at = @At(value = "INVOKE", //
                     target = LEVEL + "setBlockAndUpdate(" + BLOCK_POS + BLOCK_STATE + ")Z"))
     public boolean setBlockAndUpdateProxy(Level level, BlockPos pos, BlockState state) {
-        return level.setBlockAndUpdate(pos, state);
+        return level.setBlockAndUpdate(pos, Flowstone.replace(level, pos,
+                FlowstoneGenerator.getFlowstoneStoneGenerators(level, state)).orElse(state));
     }
 }

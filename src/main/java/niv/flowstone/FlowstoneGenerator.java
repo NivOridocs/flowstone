@@ -55,4 +55,11 @@ public class FlowstoneGenerator implements Predicate<BlockState>, BiFunction<Lev
                 .filter(generator -> generator.test(Blocks.STONE.defaultBlockState()))
                 .collect(toSet());
     }
+
+    public static final Set<FlowstoneGenerator> getFlowstoneStoneGenerators(LevelAccessor level, BlockState state) {
+        return level.registryAccess().registry(Flowstone.GENERATOR).stream()
+                .flatMap(Registry::stream)
+                .filter(generator -> generator.test(state))
+                .collect(toSet());
+    }
 }
