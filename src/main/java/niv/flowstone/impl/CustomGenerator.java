@@ -34,7 +34,7 @@ public class CustomGenerator implements Predicate<BlockState>, Generator {
             .apply(instance, CustomGenerator::new));
 
     public static final ResourceKey<Registry<CustomGenerator>> REGISTRY = ResourceKey
-            .createRegistryKey(new ResourceLocation(Flowstone.MOD_ID, "generators"));
+            .createRegistryKey(ResourceLocation.tryBuild(Flowstone.MOD_ID, "generators"));
 
     private final Block replace;
 

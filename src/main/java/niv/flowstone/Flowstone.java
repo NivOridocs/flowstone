@@ -56,7 +56,7 @@ public class Flowstone implements ModInitializer {
 
     private final void registerDatapack(ModContainer container, String path, String name, boolean enabled) {
         ResourceManagerHelper.registerBuiltinResourcePack(
-                new ResourceLocation(MOD_ID, path),
+                ResourceLocation.tryBuild(MOD_ID, path),
                 container,
                 Component.literal(name),
                 enabled
