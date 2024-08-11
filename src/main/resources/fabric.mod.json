@@ -19,6 +19,7 @@
 			"niv.flowstone.Flowstone"
 		]
 	},
+    "accessWidener" : "flowstone.accesswidener",
 	"mixins": [
 		"flowstone.mixins.json"
 	],
