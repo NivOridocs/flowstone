@@ -18,7 +18,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,9 +27,8 @@ import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguratio
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacementContext;
 import net.minecraft.world.level.levelgen.placement.PlacementModifier;
-import niv.flowstone.api.Generator;
 
-public class BiomeGenerator implements Generator {
+public class BiomeGenerator {
 
     private static final Map<ResourceLocation, List<BiomeGenerator>> biomeCache = new HashMap<>();
     private static final Map<ResourceLocation, List<BiomeGenerator>> featureCache = new HashMap<>();
@@ -51,13 +49,7 @@ public class BiomeGenerator implements Generator {
         this.modifiers = ImmutableList.copyOf(modifier);
     }
 
-    @Override
-    public boolean test(RandomSource random, BlockState state) {
-        return this.target.target.test(state, random);
-    }
-
-    @Override
-    public Stream<BlockState> apply(LevelAccessor accessor, BlockPos pos) {
+    public Optional<BlockState> apply(LevelAccessor accessor, BlockPos pos) {
         var zero = accessor.getChunk(pos).getPos().getWorldPosition().atY(pos.getY());
         var result = cache.getIfPresent(zero);
         if (result == null) {
@@ -74,9 +66,9 @@ public class BiomeGenerator implements Generator {
             }
         }
         if (result.stream().anyMatch(pos::equals)) {
-            return Stream.of(target.state);
+            return Optional.of(target.state);
         } else {
-            return Stream.empty();
+            return Optional.empty();
         }
     }
 

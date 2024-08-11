@@ -1,6 +1,8 @@
 package niv.flowstone;
 
-import java.util.stream.Stream;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +46,7 @@ public class Flowstone implements ModInitializer {
         // Proceed with mild caution.
         LOGGER.info("Initialize");
 
-        ServerWorldEvents.LOAD.register(new BiomeGenerator.CacheInvalidator());
+        ServerWorldEvents.LOAD.register(new SimpleGenerator.CacheInvalidator());
 
         var container = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
 
@@ -63,14 +65,12 @@ public class Flowstone implements ModInitializer {
                         : ResourcePackActivationType.NORMAL);
     }
 
-    public static final BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
-        var states = Stream.concat(
-                FlowstoneGenerator.all(level),
-                BiomeGenerator.all(level, pos))
-                .filter(generator -> generator.test(level.getRandom(), state))
-                .flatMap(generator -> generator.apply(level, pos))
-                .toList();
-        return states.isEmpty() ? state
-                : states.get(level.getRandom().nextInt(states.size()));
+    public static final Optional<BlockState> replace(LevelAccessor level, BlockPos pos,
+            Set<? extends BiFunction<LevelAccessor, BlockPos, Optional<BlockState>>> generators) {
+        var states = generators.stream()
+                .map(generator -> generator.apply(level, pos))
+                .flatMap(Optional::stream).toList();
+        return states.isEmpty() ? Optional.empty()
+                : Optional.of(states.get(level.getRandom().nextInt(states.size())));
     }
 }

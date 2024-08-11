@@ -1,7 +1,5 @@
 package niv.flowstone.mixin;
 
-import static niv.flowstone.Flowstone.replace;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -23,6 +21,6 @@ public class LiquidBlockMixin {
             at = @At(value = "INVOKE", //
                     target = LEVEL + "setBlockAndUpdate(" + BLOCK_POS + BLOCK_STATE + ")Z"))
     public boolean setBlockAndUpdateProxy(Level level, BlockPos pos, BlockState state) {
-        return level.setBlockAndUpdate(pos, replace(level, pos, state));
+        return level.setBlockAndUpdate(pos, state);
     }
 }
