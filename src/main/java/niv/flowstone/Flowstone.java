@@ -23,7 +23,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.flowstone.api.Replacer;
 import niv.flowstone.config.Configuration;
-import niv.flowstone.config.ConfigurationLoader;
 import niv.flowstone.impl.CustomGenerator;
 import niv.flowstone.impl.DeepslateGenerator;
 import niv.flowstone.impl.WorldlyGenerator;
@@ -48,12 +47,13 @@ public class Flowstone implements ModInitializer {
         // Proceed with mild caution.
         LOGGER.info("Initialize");
 
-        ConfigurationLoader.load();
-
         DynamicRegistries.register(CustomGenerator.REGISTRY, CustomGenerator.CODEC);
 
         ServerWorldEvents.LOAD.register(DeepslateGenerator.getCacheInvalidator());
         ServerWorldEvents.LOAD.register(WorldlyGenerator.getCacheInvalidator());
+
+        Configuration.LOADED.register(() -> LOGGER.warn("Load configuration"));
+        Configuration.init();
 
         configureReplacer();
 

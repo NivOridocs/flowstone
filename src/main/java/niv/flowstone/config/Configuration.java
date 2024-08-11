@@ -1,10 +1,15 @@
 package niv.flowstone.config;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
+
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
 
 public final class Configuration {
 
-    static final AtomicReference<Configuration> INSTANCE = new AtomicReference<>(new Configuration());
+    public static final Event<Runnable> LOADED = EventFactory
+            .createArrayBacked(Runnable.class,
+                    runnables -> () -> Stream.of(runnables).forEach(Runnable::run));
 
     private boolean allowDeepslateGenerators = true;
     private boolean allowWorldlyGenerators = true;
@@ -12,26 +17,34 @@ public final class Configuration {
 
     private Boolean debugMode = null;
 
-    private Configuration() {
+    Configuration() {
     }
 
     private boolean getDebugMode() {
         return this.debugMode != null && this.debugMode;
     }
 
+    private static final Configuration getInstance() {
+        return ConfigurationLoader.getConfiguration();
+    }
+
+    public static final void init() {
+        getInstance();
+    }
+
     public static final boolean allowDeepslateGenerators() {
-        return INSTANCE.get().allowDeepslateGenerators;
+        return getInstance().allowDeepslateGenerators;
     }
 
     public static final boolean allowWorldlyGenerators() {
-        return INSTANCE.get().allowWorldlyGenerators;
+        return getInstance().allowWorldlyGenerators;
     }
 
     public static final boolean allowCustomGenerators() {
-        return INSTANCE.get().allowCustomGenerators;
+        return getInstance().allowCustomGenerators;
     }
 
     public static final boolean debugMode() {
-        return INSTANCE.get().getDebugMode();
+        return getInstance().getDebugMode();
     }
 }

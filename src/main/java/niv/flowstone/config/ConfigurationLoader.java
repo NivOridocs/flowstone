@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.google.common.base.Suppliers;
@@ -17,7 +16,9 @@ import com.google.gson.JsonSyntaxException;
 
 import net.fabricmc.loader.api.FabricLoader;
 
-public class ConfigurationLoader {
+public final class ConfigurationLoader {
+
+    private static final long DELAY = 5000; // ms (5s)
 
     private static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
@@ -29,17 +30,35 @@ public class ConfigurationLoader {
                     .resolve(MOD_ID + ".json")
                     .toFile());
 
+    private static Configuration configuration = new Configuration();
+
+    private static long timestamp = 0;
+
     private static long lastModified = 0;
+
+    private static boolean fireOnReturn = true;
 
     private ConfigurationLoader() {
     }
 
-    public static final void load() {
-        var file = configurationFile.get();
-        if (create(file) || read(file)) {
-            write(file);
+    static final Configuration getConfiguration() {
+        synchConfiguration();
+        if (fireOnReturn) {
+            Configuration.LOADED.invoker().run();
+            fireOnReturn = false;
         }
-        lastModified = file.lastModified();
+        return configuration;
+    }
+
+    private static final synchronized void synchConfiguration() {
+        var now = System.currentTimeMillis();
+        if (timestamp + DELAY < now) {
+            var file = configurationFile.get();
+            if (create(file) || read(file)) {
+                write(file);
+            }
+            timestamp = now;
+        }
     }
 
     private static final boolean create(File file) {
@@ -54,10 +73,16 @@ public class ConfigurationLoader {
         var newLastModified = file.lastModified();
         if (newLastModified <= lastModified) {
             return false;
+        } else {
+            lastModified = newLastModified;
         }
         try (var reader = new FileReader(file)) {
-            return Optional.ofNullable(gson.fromJson(reader, Configuration.class))
-                    .map(Configuration.INSTANCE::getAndSet).isPresent();
+            var result = gson.fromJson(reader, Configuration.class);
+            if (result != null) {
+                configuration = result;
+                fireOnReturn = true;
+            }
+            return true;
         } catch (JsonSyntaxException | JsonIOException | IOException ex) {
             throw new IllegalStateException("Failed to read configuration file", ex);
         }
@@ -65,10 +90,8 @@ public class ConfigurationLoader {
 
     private static final void write(File file) {
         try (var writer = new FileWriter(file)) {
-            Configuration.INSTANCE.getAndUpdate(value -> {
-                gson.toJson(value, writer);
-                return value;
-            });
+            gson.toJson(configuration, writer);
+            lastModified = file.lastModified();
         } catch (JsonIOException | IOException ex) {
             throw new IllegalStateException("Failed to write configuration file", ex);
         }
