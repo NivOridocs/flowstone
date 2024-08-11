@@ -22,6 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.flowstone.api.Replacer;
+import niv.flowstone.config.Configuration;
 import niv.flowstone.config.ConfigurationLoader;
 import niv.flowstone.impl.CustomGenerator;
 import niv.flowstone.impl.DeepslateGenerator;
@@ -54,15 +55,24 @@ public class Flowstone implements ModInitializer {
         ServerWorldEvents.LOAD.register(DeepslateGenerator.getCacheInvalidator());
         ServerWorldEvents.LOAD.register(WorldlyGenerator.getCacheInvalidator());
 
-        replacers.add(DeepslateGenerator.getReplacer());
-        replacers.add(WorldlyGenerator.getReplacer());
-        replacers.add(CustomGenerator.getReplacer());
+        configureReplacer();
 
         var container = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
 
         registerDatapack(container, "overworld_ores", "Overworld Ores", false);
         registerDatapack(container, "crying_obsidian", "Crying Obsidian", false);
         registerDatapack(container, "nether_ores", "Netherrack and Nether Ores", false);
+    }
+
+    private final void configureReplacer() {
+        if (Configuration.allowDeepslateGenerators())
+            replacers.add(DeepslateGenerator.getReplacer());
+
+        if (Configuration.allowWorldlyGenerators())
+            replacers.add(WorldlyGenerator.getReplacer());
+
+        if (Configuration.allowCustomGenerators())
+            replacers.add(CustomGenerator.getReplacer());
     }
 
     private final void registerDatapack(ModContainer container, String path, String name, boolean enabled) {
