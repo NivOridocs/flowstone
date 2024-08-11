@@ -8,13 +8,7 @@ import org.slf4j.LoggerFactory;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.flowstone.config.Configuration;
@@ -46,22 +40,6 @@ public class Flowstone implements ModInitializer {
         Configuration.LOADED.register(Replacers.getInvalidator());
 
         Configuration.init();
-
-        var container = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow();
-
-        registerDatapack(container, "overworld_ores", "Overworld Ores", false);
-        registerDatapack(container, "crying_obsidian", "Crying Obsidian", false);
-        registerDatapack(container, "nether_ores", "Netherrack and Nether Ores", false);
-    }
-
-    private final void registerDatapack(ModContainer container, String path, String name, boolean enabled) {
-        ResourceManagerHelper.registerBuiltinResourcePack(
-                ResourceLocation.tryBuild(MOD_ID, path),
-                container,
-                Component.literal(name),
-                enabled
-                        ? ResourcePackActivationType.DEFAULT_ENABLED
-                        : ResourcePackActivationType.NORMAL);
     }
 
     public static final BlockState replace(LevelAccessor level, BlockPos pos, BlockState state) {
