@@ -1,0 +1,5 @@
+{
+    "replace": "minecraft:cobblestone",
+    "with": "minecraft:andesite",
+    "chance": 0.3
+}
