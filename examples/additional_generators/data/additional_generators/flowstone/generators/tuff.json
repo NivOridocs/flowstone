@@ -1,0 +1,5 @@
+{
+    "replace": "minecraft:cobbled_deepslate",
+    "with": "minecraft:tuff",
+    "chance": 0.3
+}

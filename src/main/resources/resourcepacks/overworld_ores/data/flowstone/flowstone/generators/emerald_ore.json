@@ -1,5 +1,0 @@
-{
-    "replace": "minecraft:stone",
-    "with": "minecraft:emerald_ore",
-    "chance": 0.01
-}

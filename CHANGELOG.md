@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [6.3] - 2024-08-13
+
+### Added
+
++ Add a configuration file
++ Add dynamic Deeplate and Cobbled Deepslate generation through the Deepslate Generators feature.
++ Add dynamic ore blockc generation (3rd party mods compatible) through the Worldly Generators feature.
++ Add netherrack generation through the Netherrack Generation feature.
++ Add the Basalt Generation feature to turn off basalt generation.
++ Add debug mode for troubleshooting purposes through the hidden Debug Mode feature.
+
+### Removed
+
++ Remove build-it datapacks, all of them.
+
 ## [6.2] - 2024-04-27
 
 ### Added
@@ -38,6 +53,7 @@
 + Replace configuration file with custom recipes.
 + Drop mod's patch version because unnecessary.
 
+[6.3]: https://github.com/NivOridocs/flowstone/releases/tag/6.3
 [6.2]: https://github.com/NivOridocs/flowstone/releases/tag/6.2
 [6.1]: https://github.com/NivOridocs/flowstone/releases/tag/6.1
 [6.0]: https://github.com/NivOridocs/flowstone/releases/tag/6.0

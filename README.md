@@ -1,44 +1,100 @@
 # Flowstone
 
-Flowstone is a mod that makes ores renewable resources.
-
-In vanilla Minecraft, lava flowing over water always generates a stone block. With Flowstone, there is a chance that it will generate a random ore block instead.
-
-By default, all eight vanilla overworld ore blocks (coal, copper, iron, gold, lapis, redstone, emerald, and diamond) can be generated with a 1% chance each.
+Flowstone makes ores renewable resources by modifying what blocks Lava turns into whenever it meets Water (or, in some cases, a Blue Ice block).
 
 ![Flowstone Showcase](img/Flowstone_Showcase_1.gif)
 
-(In the GIF, each ore block has a 100% chance for example purposes.)
+(In the GIF, I configured Flowstone to always generate some ore instead of Stone, for example purposes)
 
-## Generators
+## Features
 
-Flowstone uses a custom `flowstone:generators` dynamic registry to determine whether and how to replace an about-to-be-generated block.
+Since version 6.3, Flowstone offers various features that can be separately activated and deactivated through the configuration file.
 
-Said registry reads files from `/data/<mod id or datapack name>/flowstone/generators`, files like the following example.
+### Deepslate Generators
+
+```json
+"allowDeepslateGenerators": true // enabled by default
+```
+
+With this feature enabled, trying to generate Stone or Cobblestone when deep enough underground (in most worlds, below y=8) will generate Deepslate and Cobbled Deepslate instead.
+
+Note that this feature depends on the world generation options. Thus, if, for some reason, your world doesn't replace Stone and Cobblestone with Deepslate and Cobble Deepslate or does so at a different y-level, this feature will mirror such configurations.
+
+### Worldly Generators
+
+```json
+"allowWorldlyGenerators": true // enabled by default
+```
+
+With this feature enabled, whenever Stone, Deepslate (with the previous feature), or Netherrack (with one of the following features) is to be generated, an ore block might be generated instead.
+
+For each ore block (that is, for each block under the `c:ores` tag), the probability of it being generated depends on the world generation configuration, so on a vanilla world with the same distribution [documented on the wiki](https://minecraft.wiki/w/Ore).
+
+This feature should automatically be compatible with every mod that adds new ores under the `c:ores` tag.
+
+Finally, note that only normal ore blocks (like Diamond Ore) can replace Stone, only deepslate ore blocks (like Deepslate Diamond Ore) can replace Deepslate, and only netherrack ore blocks (like Quartz Ore or Ancient Debris) can replace Netherrack.
+
+### Custom Generators
+
+```json
+"allowWorldlyGenerators": false // disabled by default
+```
+
+With this feature, one can define custom generators through datapacks.
 
 <details>
-<summary>Example: stone_to_coal_ore.json</summary>
+<summary>Example</summary>
+
+```tree
+.
+├── data
+│   └── additional_generators
+│       └── flowstone
+│           └── generators
+│               ├── andesite.json
+│               ├── diorite.json
+│               ├── granite.json
+│               └── tuff.json
+└── pack.mcmeta
+```
 
 ```json
 {
-    "replace": "minecraft:stone", // The block to be replaced
-    "with": "minecraft:coal_ore", // The block to replace the above one with
-    "chance": 0.01 // The replacement chance
+    // The block to be replaced
+    "replace": "minecraft:cobbled_deepslate",
+    // The block to replace the previous with
+    "with": "minecraft:tuff",
+    // The cache of replacement
+    "chance": 0.3
 }
 ```
 
 </details>
 
-This way, through datapacks, one can easily extend Flowstone to, for instance, account for modded ores.
+The rest of this example is on the project source page on GitHub, under the examples folder.
 
-## Datapacks
+### Basalt Generation
 
-Flowstone offers three built-in datapacks to enable/disable to add or remove generation options.
+```json
+"enableBasaltGeneration": false // disabled by default
+```
 
-+ **Overworld Ores** (enabled by default) adds a 1%-per-ore chance for lava flowing over water to generate an overworld ore instead of stone.
+I know, I know, Basalt generation is already a vanilla Minecraft feature but since I freaking hate Basalt for its uselessness, I added this feature to disable its generation. Simple as that.
 
-+ **Crying Obsidian** (disabled by default) adds a 25% chance for water flowing over a lava source to generate crying obsidian instead of obsidian.
+### Netherrack Generation
 
-+ **Netherrack and Nether Ores** (enabled by default) adds a chance for lava flowing over soul soil (and near blue ice) to generate, instead of basalt, netherrack with a 100% chance, nether gold and quartz ore with 10% each, and ancient debris with a 1% chance.
+```json
+"enableNetherrackGeneration": true // enabled by default
+```
 
-Plus, these datapacks offer good examples on how to create more.
+With this feature, whenever Lava meets a Blue Ice block in the Nether, and if no Basalt is to be generated, the Lava turns into a Netherrack block.
+
+### Debug Mode
+
+```json
+"debugMode": null // hidden and disabled by default
+```
+
+When enabled, this feature forces Flowstone to generate the alternative blocks instead of the default ones, as if setting the chances for those blocks to be generated to 100% (the feature GIF had been generated with this feature enabled, for instance).
+
+One should use this feature only when and if they are testing which blocks Worldly or Custom generators (for it works only for those two features) can generate since using it through a normal playthrough is practically cheating.
