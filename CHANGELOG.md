@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
++ Fix LiquidBlockMixin conflicting with other mods.
+
 ## [6.3] - 2024-08-13
 
 ### Added

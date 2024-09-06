@@ -16,7 +16,3 @@ accessible   class   net/minecraft/world/level/levelgen/SurfaceRules$SequenceRul
 accessible   class   net/minecraft/world/level/levelgen/SurfaceRules$TestRuleSource
 
 accessible   class   net/minecraft/world/level/levelgen/SurfaceRules$VerticalGradientConditionSource
-
-accessible   field   net/minecraft/world/level/block/LiquidBlock fluid Lnet/minecraft/world/level/material/FlowingFluid;
-accessible   method  net/minecraft/world/level/block/LiquidBlock fizz (Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;)V
-accessible   method  net/minecraft/world/level/block/LiquidBlock shouldSpreadLiquid (Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z
