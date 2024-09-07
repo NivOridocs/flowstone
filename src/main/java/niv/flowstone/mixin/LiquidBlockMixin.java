@@ -31,10 +31,15 @@ public abstract class LiquidBlockMixin {
     @Shadow
     protected abstract void fizz(LevelAccessor world, BlockPos pos);
 
-    @SuppressWarnings("deprecation")
     @Inject(method = "shouldSpreadLiquid", at = @At("HEAD"), cancellable = true)
     private void shouldSpreadLiquidProxy(Level level, BlockPos pos, BlockState state,
             CallbackInfoReturnable<Boolean> context) {
+        context.setReturnValue(shouldSpreadLiquidLogic(level, pos, state));
+        context.cancel();
+    }
+
+    @SuppressWarnings("deprecation")
+    private boolean shouldSpreadLiquidLogic(Level level, BlockPos pos, BlockState state) {
         if (this.fluid.is(FluidTags.LAVA)) {
             var overSoulSoil = level.getBlockState(pos.below()).is(Blocks.SOUL_SOIL);
             for (var direction : LiquidBlock.POSSIBLE_FLOW_DIRECTIONS) {
@@ -48,13 +53,11 @@ public abstract class LiquidBlockMixin {
                 if (block != null) {
                     level.setBlockAndUpdate(pos, Flowstone.replace(level, pos, block.defaultBlockState()));
                     this.fizz(level, pos);
-                    context.setReturnValue(false);
-                    context.cancel();
+                    return false;
                 }
             }
         }
-        context.setReturnValue(true);
-        context.cancel();
+        return true;
     }
 
     private Block getBlock(boolean isWater, boolean isSource,
