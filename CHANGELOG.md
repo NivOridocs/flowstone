@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [6.4] - 2024-09-7
+
 ### Fixed
 
 + Fix LiquidBlockMixin conflicting with other mods.
@@ -57,6 +59,7 @@
 + Replace configuration file with custom recipes.
 + Drop mod's patch version because unnecessary.
 
+[6.4]: https://github.com/NivOridocs/flowstone/releases/tag/6.4
 [6.3]: https://github.com/NivOridocs/flowstone/releases/tag/6.3
 [6.2]: https://github.com/NivOridocs/flowstone/releases/tag/6.2
 [6.1]: https://github.com/NivOridocs/flowstone/releases/tag/6.1
